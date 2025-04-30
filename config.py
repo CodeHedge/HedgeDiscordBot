@@ -12,12 +12,15 @@ def load_config():
         # Prompt the user for the token and first channel ID
         token = input("Enter your Discord bot token: ").strip()
         first_channel_id = input("Enter the first channel ID to monitor: ").strip()
-        
+        openai_api_key = input("Enter your OpenAI API key (or leave blank): ").strip()
+
         # Create the config dictionary
         config = {
             "token": token,
             "channels": [first_channel_id],
-            "excluded_users": []
+            "excluded_users": [],
+            "openai_api_key": None,
+            "openai_model": "gpt-3.5-turbo"
         }
         
         # Write the config to the file
