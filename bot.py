@@ -5,6 +5,7 @@ from discord.ext import commands
 import asyncio
 import logging
 from config import load_config  # Import the load_config function
+from commands import setup_commands  # Import the setup_commands function
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,6 +27,9 @@ intents.guilds = True
 intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Load commands
+setup_commands(bot)
 
 @bot.event
 async def on_ready():
@@ -63,11 +67,6 @@ async def on_message(message):
 
     # Process commands if any
     await bot.process_commands(message)
-
-@bot.command()
-async def ping(ctx):
-    """A simple ping command."""
-    await ctx.send("Pong! 🏓")
 
 # Run the bot
 if __name__ == "__main__":
