@@ -34,3 +34,14 @@ def load_config():
             config = json.load(f)
 
     return config
+
+def load_moderation():
+    moderation_path = 'moderation.json'
+    if not os.path.exists(moderation_path):
+        logger.warning(f"Moderation file '{moderation_path}' not found. Creating a new one.")
+        with open(moderation_path, 'w') as f:
+            json.dump({}, f, indent=4)
+        logger.info(f"Moderation file '{moderation_path}' created successfully.")
+    else:
+        logger.info(f"Moderation file '{moderation_path}' loaded successfully.")
+    return moderation_path
