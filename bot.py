@@ -47,23 +47,11 @@ async def on_message(message):
         logger.info(f"Message received in monitored channel {message.channel.name}: {message.content}")
 
         # Example: React to the message
-        #await message.add_reaction("👀")
+        await message.add_reaction("👀")
 
         # Example: Reply to the message
         if "hello bot" in message.content.lower():
             await message.channel.send(f"Hello, {message.author.mention}!")
-
-        # Example: Create and send an embed
-        if "bot info" in message.content.lower():
-            embed = discord.Embed(
-                title="Bot Information",
-                description="This is a sample embed message.",
-                color=discord.Color.blue()
-            )
-            embed.add_field(name="Author", value=message.author.name, inline=False)
-            embed.add_field(name="Channel", value=message.channel.name, inline=False)
-            embed.set_footer(text="HedgeDiscordBot")
-            await message.channel.send(embed=embed)
 
     # Process commands regardless of the channel type (guild or DM)
     await bot.process_commands(message)
