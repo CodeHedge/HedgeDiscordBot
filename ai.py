@@ -3,6 +3,9 @@ import asyncio
 from config import load_config  # Reuse the load_config function
 from openai import OpenAI
 from helper import save_offense
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def process_ai_request(prompt: str) -> str:
     # Load config and retrieve the OpenAI API key.
@@ -34,6 +37,7 @@ async def moderate_message(content: str, username: str):
     config = load_config()
     openai_key = config.get("openai_api_key")
     if not openai_key:
+        logger.error("OpenAI API key is not configured.")
         return "OpenAI API key is not configured."
 
     client = OpenAI(api_key=openai_key)
@@ -47,6 +51,9 @@ async def moderate_message(content: str, username: str):
             )
         )
 
+        # Log the raw response from the API
+        logger.info(f"Moderation API response for user '{username}': {response}")
+
         # Parse the results
         results = response.get("results", [])
         if results:
@@ -54,7 +61,9 @@ async def moderate_message(content: str, username: str):
             for category, flagged in flagged_categories.items():
                 if flagged:
                     save_offense(username, category)
+                    logger.info(f"Flagged category '{category}' for user '{username}'.")
 
         return "Message processed for moderation."
     except Exception as e:
+        logger.error(f"Error during moderation for user '{username}': {e}")
         return f"Error during moderation: {e}"
