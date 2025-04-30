@@ -2,10 +2,12 @@ from discord.ext import commands
 import discord
 import openai  # pip install openai
 import asyncio
+import ai
 from config import load_config  # Reuse the load_config function
 from ai import process_ai_request  # Import the new AI logic
 import json
 import os
+from datetime import datetime, timedelta
 
 def setup_commands(bot):
     @bot.command()
@@ -103,3 +105,33 @@ def setup_commands(bot):
             await ctx.send(f"Channel {channel_id} added to the monitored channels.")
         else:
             await ctx.send(f"Channel {channel_id} is already in the monitored channels.")
+
+    @bot.command()
+    async def scan_history(ctx, days: int):
+        """
+        Scan the last x days in all monitored channels.
+        This command clears the moderation file before starting.
+        """
+        # Clear the moderation.json file.
+        moderation_path = 'moderation.json'
+        with open(moderation_path, 'w') as f:
+            json.dump({}, f, indent=4)
+        await ctx.send("Cleared previous moderation records. Beginning history scan...")
+
+        config = load_config()
+        cutoff_time = datetime.utcnow() - timedelta(days=days)
+
+        for channel_id in config['channels']:
+            channel = bot.get_channel(int(channel_id))
+            if channel:
+                await ctx.send(f"Scanning channel: {channel.name}")
+                async for message in channel.history(after=cutoff_time, oldest_first=True):
+                    # Skip if message has no content.
+                    if not message.content:
+                        continue
+                    # Run each message through the moderation API.
+                    await ai.moderate_message(message.content, str(message.author))
+            else:
+                await ctx.send(f"Could not find channel with ID {channel_id}")
+
+        await ctx.send("Finished scanning message history.")
