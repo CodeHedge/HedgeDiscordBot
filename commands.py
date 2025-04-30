@@ -3,6 +3,7 @@ import discord
 import openai  # pip install openai
 import asyncio
 from config import load_config  # Reuse the load_config function
+from ai import process_ai_request  # Import the new AI logic
 
 def setup_commands(bot):
     @bot.command()
@@ -31,31 +32,7 @@ def setup_commands(bot):
 
     @bot.command()
     async def ai(ctx, *, prompt: str):
-
         if hasattr(ctx.channel, "trigger_typing"):
             await ctx.channel.trigger_typing()
-        try:
-            # Load config and retrieve the OpenAI API key.
-            config = load_config()
-            openai_key = config.get("openai_api_key")
-            openai_model = config.get("openai_model")
-            if not openai_key:
-                await ctx.send("OpenAI API key is not configured.")
-                return
-
-            # Initialize OpenAI client.
-            client = openai.OpenAI(api_key=openai_key)
-
-            # Run the API call in a background thread to avoid blocking.
-            response = await asyncio.to_thread(
-                lambda: client.responses.create(
-                    model=openai_model,
-                    instructions="You are an AI assistant.",
-                    input=prompt,
-                )
-            )
-
-            answer = response.output_text.strip()
-            await ctx.send(answer)
-        except Exception as e:
-            await ctx.send("Sorry, something went wrong processing your request.")
+        answer = await process_ai_request(prompt)
+        await ctx.send(answer)
