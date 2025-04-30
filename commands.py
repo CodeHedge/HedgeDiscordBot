@@ -12,7 +12,7 @@ def setup_commands(bot):
         """Send bot information as an embed."""
         embed = discord.Embed(
             title="Bot Information",
-            description="This is a sample embed message.",
+            description="Im hedges bot. Working on more features. I auto update when i get pushed too. Cool.....",
             color=discord.Color.blue()
         )
         embed.add_field(name="Author", value=ctx.author.name, inline=False)
