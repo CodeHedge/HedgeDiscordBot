@@ -45,3 +45,13 @@ def load_moderation():
     else:
         logger.info(f"Moderation file '{moderation_path}' loaded successfully.")
     return moderation_path
+
+def add_channel(channel_id):
+    config = load_config()
+    if channel_id not in config['channels']:
+        config['channels'].append(channel_id)
+        with open('config.json', 'w') as f:
+            json.dump(config, f, indent=4)
+        logger.info(f"Channel {channel_id} added to the configuration.")
+    else:
+        logger.info(f"Channel {channel_id} is already in the configuration.")

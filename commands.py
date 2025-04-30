@@ -91,3 +91,15 @@ def setup_commands(bot):
         )
 
         await ctx.send(embed=embed)
+
+    @bot.command()
+    async def add_channel(ctx, channel_id: int):
+        """Add a channel to the monitored channels."""
+        config = load_config()
+        if str(channel_id) not in config['channels']:
+            config['channels'].append(str(channel_id))
+            with open('config.json', 'w') as f:
+                json.dump(config, f, indent=4)
+            await ctx.send(f"Channel {channel_id} added to the monitored channels.")
+        else:
+            await ctx.send(f"Channel {channel_id} is already in the monitored channels.")
