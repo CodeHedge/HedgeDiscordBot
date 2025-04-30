@@ -47,7 +47,7 @@ async def on_message(message):
         logger.info(f"Message received in monitored channel {message.channel.name}: {message.content}")
 
         # Example: React to the message
-        await message.add_reaction("👀")
+        #await message.add_reaction("👀")
 
         # Example: Reply to the message
         if "hello bot" in message.content.lower():

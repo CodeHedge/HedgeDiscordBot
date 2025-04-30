@@ -31,7 +31,7 @@ def setup_commands(bot):
 
     @bot.command()
     async def ai(ctx, *, prompt: str):
-        """Send prompt to OpenAI GPT-4.1 model and return the response."""
+
         if hasattr(ctx.channel, "trigger_typing"):
             await ctx.channel.trigger_typing()
         try:
