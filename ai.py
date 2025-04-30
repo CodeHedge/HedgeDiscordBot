@@ -51,17 +51,34 @@ async def moderate_message(content: str, username: str):
             )
         )
 
-        # Log the raw response from the API
         logger.info(f"Moderation API response for user '{username}': {response}")
 
-        # Parse the results
-        results = response.get("results", [])
-        if results:
-            flagged_categories = results[0].get("categories", {})
-            for category, flagged in flagged_categories.items():
-                if flagged:
-                    save_offense(username, category)
-                    logger.info(f"Flagged category '{category}' for user '{username}'.")
+        # Try to get 'results' whether response is a dict or an object.
+        if isinstance(response, dict):
+            results = response.get("results", [])
+        else:
+            results = getattr(response, "results", None)
+
+        if results and isinstance(results, list):
+            # Check if each result is dict or an object.
+            first_result = results[0]
+            if isinstance(first_result, dict):
+                flagged_categories = first_result.get("categories", {})
+                for category, flagged in flagged_categories.items():
+                    if flagged:
+                        save_offense(username, category)
+                        logger.info(f"Flagged category '{category}' for user '{username}'.")
+            else:
+                # Assume object with attributes.
+                categories_obj = getattr(first_result, "categories", None)
+                if categories_obj:
+                    # Use __dict__ to iterate over attributes.
+                    for category, flagged in categories_obj.__dict__.items():
+                        if flagged:
+                            save_offense(username, category)
+                            logger.info(f"Flagged category '{category}' for user '{username}'.")
+        else:
+            logger.info(f"No results found in moderation response for user '{username}'.")
 
         return "Message processed for moderation."
     except Exception as e:
