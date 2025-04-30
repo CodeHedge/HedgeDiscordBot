@@ -4,6 +4,8 @@ import openai  # pip install openai
 import asyncio
 from config import load_config  # Reuse the load_config function
 from ai import process_ai_request  # Import the new AI logic
+import json
+import os
 
 def setup_commands(bot):
     @bot.command()
@@ -36,3 +38,56 @@ def setup_commands(bot):
             await ctx.channel.trigger_typing()
         answer = await process_ai_request(prompt)
         await ctx.send(answer)
+
+    @bot.command()
+    async def offenses(ctx):
+        """List all users and their offenses."""
+        moderation_path = 'moderation.json'
+        if not os.path.exists(moderation_path):
+            await ctx.send("No moderation data found.")
+            return
+
+        with open(moderation_path, 'r') as f:
+            data = json.load(f)
+
+        if not data:
+            await ctx.send("No offenses recorded.")
+            return
+
+        embed = discord.Embed(
+            title="User Offenses",
+            description="List of users and their offenses:",
+            color=discord.Color.red()
+        )
+
+        for username, offenses in data.items():
+            offense_list = "\n".join([f"{category}: {count}" for category, count in offenses.items()])
+            embed.add_field(name=username, value=offense_list, inline=False)
+
+        await ctx.send(embed=embed)
+
+    @bot.command()
+    async def offenses_user(ctx, username: str):
+        """List offenses for a specific user."""
+        moderation_path = 'moderation.json'
+        if not os.path.exists(moderation_path):
+            await ctx.send("No moderation data found.")
+            return
+
+        with open(moderation_path, 'r') as f:
+            data = json.load(f)
+
+        if username not in data:
+            await ctx.send(f"No offenses recorded for user: {username}")
+            return
+
+        offenses = data[username]
+        offense_list = "\n".join([f"{category}: {count}" for category, count in offenses.items()])
+
+        embed = discord.Embed(
+            title=f"Offenses for {username}",
+            description=offense_list,
+            color=discord.Color.red()
+        )
+
+        await ctx.send(embed=embed)
