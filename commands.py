@@ -131,6 +131,7 @@ def setup_commands(bot):
         """
         Scan the last x messages in all monitored channels.
         This command clears the moderation file before starting.
+        At the end, it echoes back the text that was submitted to the moderation API.
         """
         if ctx.author.id not in sudo_users:
             await ctx.send("You do not have permission to use this command.")
@@ -143,18 +144,33 @@ def setup_commands(bot):
         await ctx.send("Cleared previous moderation records. Beginning history scan...")
 
         config = load_config()
+        processed_texts = []  # This list stores all texts submitted to the API
 
         for channel_id in config['channels']:
             channel = bot.get_channel(int(channel_id))
             if channel:
                 await ctx.send(f"Scanning channel: {channel.name}")
                 async for message in channel.history(limit=quantity, oldest_first=True):
-                    # Skip if message has no content.
                     if not message.content:
                         continue
-                    # Run each message through the moderation API.
+                    processed_texts.append(message.content)
                     await ai.moderate_message(message.content, str(message.author))
             else:
                 await ctx.send(f"Could not find channel with ID {channel_id}")
-#test
+
+        # Echo back the texts submitted for moderation.
+        if processed_texts:
+            # Join the messages. If the text is too long, we trim it.
+            text_summary = "\n\n".join(processed_texts)
+            if len(text_summary) > 1900:
+                text_summary = text_summary[:1900] + "\n...[truncated]"
+            embed = discord.Embed(
+                title="Scanned Message Texts",
+                description=text_summary,
+                color=discord.Color.green()
+            )
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("No messages were processed for moderation.")
+
         await ctx.send("Finished scanning message history.")
