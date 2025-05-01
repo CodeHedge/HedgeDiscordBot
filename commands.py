@@ -156,5 +156,5 @@ def setup_commands(bot):
                     await ai.moderate_message(message.content, str(message.author))
             else:
                 await ctx.send(f"Could not find channel with ID {channel_id}")
-
+#test
         await ctx.send("Finished scanning message history.")
