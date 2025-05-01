@@ -35,7 +35,7 @@ def setup_commands(bot):
         await ctx.send(embed=embed)
 
     @bot.command()
-    async def ai(ctx, *, prompt: str):
+    async def prompt(ctx, *, prompt: str):
         if hasattr(ctx.channel, "trigger_typing"):
             await ctx.channel.trigger_typing()
         answer = await process_ai_request(prompt)
