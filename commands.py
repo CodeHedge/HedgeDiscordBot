@@ -137,7 +137,7 @@ def setup_commands(bot):
         await ctx.send("Finished scanning message history.")
     
     @bot.command()
-    async def help(ctx):
+    async def commands(ctx):
         """List all commands."""
         embed = discord.Embed(
             title="Available Commands",
