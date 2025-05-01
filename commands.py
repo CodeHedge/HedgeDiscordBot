@@ -127,9 +127,9 @@ def setup_commands(bot):
             await ctx.send(f"Channel {channel_id} is not in the monitored channels.")
 
     @bot.command()
-    async def scan_history(ctx, days: int):
+    async def scan_history(ctx, quantity: int):
         """
-        Scan the last x days in all monitored channels.
+        Scan the last x messages in all monitored channels.
         This command clears the moderation file before starting.
         """
         if ctx.author.id not in sudo_users:
@@ -143,13 +143,12 @@ def setup_commands(bot):
         await ctx.send("Cleared previous moderation records. Beginning history scan...")
 
         config = load_config()
-        cutoff_time = datetime.utcnow() - timedelta(days=days)
 
         for channel_id in config['channels']:
             channel = bot.get_channel(int(channel_id))
             if channel:
                 await ctx.send(f"Scanning channel: {channel.name}")
-                async for message in channel.history(after=cutoff_time, oldest_first=True):
+                async for message in channel.history(limit=quantity, oldest_first=True):
                     # Skip if message has no content.
                     if not message.content:
                         continue
@@ -159,24 +158,3 @@ def setup_commands(bot):
                 await ctx.send(f"Could not find channel with ID {channel_id}")
 
         await ctx.send("Finished scanning message history.")
-    
-    @bot.command()
-    async def commands(ctx):
-        """List all commands."""
-        embed = discord.Embed(
-            title="Available Commands",
-            description="Here are the commands you can use:",
-            color=discord.Color.green()
-        )
-        commands_list = [
-            "!ping - Check if the bot is alive.",
-            "!info - Get information about the bot.",
-            "!prompt <your prompt> - Send a prompt to the AI.",
-            "!offenses - List all users and their offenses.",
-            "!offenses_user <username> - List offenses for a specific user.",
-            "!add_channel <channel_id> - Add a channel to the monitored channels.",
-            "!remove_channel <channel_id> - Remove a channel from the monitored channels.",
-            "!scan_history <days> - Scan the last x days in all monitored channels."
-        ]
-        embed.add_field(name="Commands", value="\n".join(commands_list), inline=False)
-        await ctx.send(embed=embed)
