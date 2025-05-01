@@ -53,9 +53,6 @@ async def on_message(message):
         # Run the message through the moderation API
         await moderate_message(message.content, str(message.author))
 
-        # Example: React to the message
-        # await message.add_reaction("👀")
-
         # Example: Reply to the message
         if "hello bot" in message.content.lower():
             await message.channel.send(f"Hello, {message.author.mention}!")
