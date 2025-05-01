@@ -20,7 +20,8 @@ def load_config():
             "channels": [first_channel_id],
             "excluded_users": [],
             "openai_api_key": None,
-            "openai_model": "gpt-3.5-turbo"
+            "openai_model": "gpt-3.5-turbo",
+            "sudo" : [292142885791465482]  
         }
         
         # Write the config to the file

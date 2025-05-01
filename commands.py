@@ -9,6 +9,10 @@ import json
 import os
 from datetime import datetime, timedelta
 
+# Load the configuration
+config = load_config()
+sudo_users = config.get("sudo", [])
+
 def setup_commands(bot):
     @bot.command()
     async def ping(ctx):
@@ -97,6 +101,10 @@ def setup_commands(bot):
     @bot.command()
     async def add_channel(ctx, channel_id: int):
         """Add a channel to the monitored channels."""
+        if ctx.author.id not in sudo_users:
+            await ctx.send("You do not have permission to use this command.")
+            return
+
         config = load_config()
         if str(channel_id) not in config['channels']:
             config['channels'].append(str(channel_id))
@@ -107,11 +115,27 @@ def setup_commands(bot):
             await ctx.send(f"Channel {channel_id} is already in the monitored channels.")
 
     @bot.command()
+    async def remove_channel(ctx, channel_id: int):
+        """Remove a channel from the monitored channels."""
+        config = load_config()
+        if str(channel_id) in config['channels']:
+            config['channels'].remove(str(channel_id))
+            with open('config.json', 'w') as f:
+                json.dump(config, f, indent=4)
+            await ctx.send(f"Channel {channel_id} removed from the monitored channels.")
+        else:
+            await ctx.send(f"Channel {channel_id} is not in the monitored channels.")
+
+    @bot.command()
     async def scan_history(ctx, days: int):
         """
         Scan the last x days in all monitored channels.
         This command clears the moderation file before starting.
         """
+        if ctx.author.id not in sudo_users:
+            await ctx.send("You do not have permission to use this command.")
+            return
+
         # Clear the moderation.json file.
         moderation_path = 'moderation.json'
         with open(moderation_path, 'w') as f:
@@ -151,6 +175,7 @@ def setup_commands(bot):
             "!offenses - List all users and their offenses.",
             "!offenses_user <username> - List offenses for a specific user.",
             "!add_channel <channel_id> - Add a channel to the monitored channels.",
+            "!remove_channel <channel_id> - Remove a channel from the monitored channels.",
             "!scan_history <days> - Scan the last x days in all monitored channels."
         ]
         embed.add_field(name="Commands", value="\n".join(commands_list), inline=False)
