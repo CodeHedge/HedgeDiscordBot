@@ -135,3 +135,23 @@ def setup_commands(bot):
                 await ctx.send(f"Could not find channel with ID {channel_id}")
 
         await ctx.send("Finished scanning message history.")
+    
+    @bot.command()
+    async def help(ctx):
+        """List all commands."""
+        embed = discord.Embed(
+            title="Available Commands",
+            description="Here are the commands you can use:",
+            color=discord.Color.green()
+        )
+        commands_list = [
+            "!ping - Check if the bot is alive.",
+            "!info - Get information about the bot.",
+            "!prompt <your prompt> - Send a prompt to the AI.",
+            "!offenses - List all users and their offenses.",
+            "!offenses_user <username> - List offenses for a specific user.",
+            "!add_channel <channel_id> - Add a channel to the monitored channels.",
+            "!scan_history <days> - Scan the last x days in all monitored channels."
+        ]
+        embed.add_field(name="Commands", value="\n".join(commands_list), inline=False)
+        await ctx.send(embed=embed)
