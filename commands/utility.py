@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import logging
 
@@ -29,7 +29,10 @@ class UtilityCommands(commands.Cog):
             
         # Get creation time and format it
         creation_time = guild.created_at.strftime("%B %d, %Y")
-        time_since = (datetime.utcnow() - guild.created_at).days
+        
+        # Handle timezone aware datetime properly
+        now = datetime.now(timezone.utc)
+        time_since = (now - guild.created_at).days
         
         # Count channels by type
         text_channels = len(guild.text_channels)
@@ -79,11 +82,14 @@ class UtilityCommands(commands.Cog):
             
         # Get join time and format it
         joined_time = member.joined_at.strftime("%B %d, %Y") if member.joined_at else "Unknown"
-        time_since_join = (datetime.utcnow() - member.joined_at).days if member.joined_at else 0
+        
+        # Handle timezone aware datetime properly
+        now = datetime.now(timezone.utc)
+        time_since_join = (now - member.joined_at).days if member.joined_at else 0
+        time_since_creation = (now - member.created_at).days
         
         # Get account creation time
         creation_time = member.created_at.strftime("%B %d, %Y")
-        time_since_creation = (datetime.utcnow() - member.created_at).days
         
         # Get roles (excluding @everyone)
         roles = [role.mention for role in member.roles if role.name != "@everyone"]
