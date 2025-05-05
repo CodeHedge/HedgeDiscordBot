@@ -99,9 +99,9 @@ class AIAnalysisCommands(commands.Cog):
             member = ctx.author
             
         # Limit the days and message count to prevent abuse
-        if days > 30:
+        if days > 365:
             await ctx.send("Maximum analysis period is 30 days.")
-            days = 30
+            days = 365
             
         if limit > 500:
             await ctx.send("Maximum message count is 2000.")
