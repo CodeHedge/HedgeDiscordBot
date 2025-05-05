@@ -115,31 +115,67 @@ class AIAnalysisCommands(commands.Cog):
             # Pattern to extract words
             word_pattern = re.compile(r'\b[a-zA-Z]+\b')
             
-            async for message in ctx.channel.history(limit=limit, after=cutoff_date):
-                checked_messages += 1
+            # Get all accessible text channels in the guild
+            channels_to_check = []
+            if ctx.guild:
+                for channel in ctx.guild.text_channels:
+                    # Only include channels the bot can read
+                    if channel.permissions_for(ctx.guild.me).read_message_history:
+                        channels_to_check.append(channel)
+            else:
+                # In DMs, just use the current channel
+                channels_to_check = [ctx.channel]
                 
-                if message.author.id != member.id or not message.content:
+            # Distribute the message limit across channels
+            per_channel_limit = max(100, limit // max(1, len(channels_to_check)))
+            
+            # Update progress message to show start of analysis
+            await progress_msg.edit(content=f"Analyzing {member.name}'s messages across {len(channels_to_check)} channels...")
+            
+            # Loop through each channel
+            for channel in channels_to_check:
+                try:
+                    async for message in channel.history(limit=per_channel_limit, after=cutoff_date):
+                        checked_messages += 1
+                        
+                        if message.author.id != member.id or not message.content:
+                            continue
+                            
+                        # Add to analysis
+                        user_messages.append(message.content)
+                        message_length.append(len(message.content))
+                        
+                        # Safely handle channel name for both guild channels and DMs
+                        channel_name = getattr(channel, 'name', 'Direct Messages')
+                        channel_distribution[channel_name] += 1
+                        
+                        hour_distribution[message.created_at.hour] += 1
+                        
+                        # Extract and count words
+                        words = word_pattern.findall(message.content.lower())
+                        for word in words:
+                            if len(word) > 2:  # Skip very short words
+                                word_count[word] += 1
+                                
+                        total_words += len(words)
+                        total_chars += len(message.content)
+                        message_count += 1
+                        
+                        # Update progress message periodically
+                        if checked_messages % 200 == 0:
+                            await progress_msg.edit(content=f"Analyzing {member.name}'s messages... Checked {checked_messages} messages so far.")
+                            
+                        # If we've hit our overall limit, stop
+                        if message_count >= limit:
+                            break
+                            
+                except Exception as e:
+                    logger.error(f"Error analyzing channel {getattr(channel, 'name', 'DM')}: {e}")
                     continue
                     
-                # Add to analysis
-                user_messages.append(message.content)
-                message_length.append(len(message.content))
-                channel_distribution[message.channel.name] += 1
-                hour_distribution[message.created_at.hour] += 1
-                
-                # Extract and count words
-                words = word_pattern.findall(message.content.lower())
-                for word in words:
-                    if len(word) > 2:  # Skip very short words
-                        word_count[word] += 1
-                        
-                total_words += len(words)
-                total_chars += len(message.content)
-                message_count += 1
-                
-                # Update progress message every 200 messages
-                if checked_messages % 200 == 0:
-                    await progress_msg.edit(content=f"Analyzing {member.name}'s messages... Checked {checked_messages} messages so far.")
+                # If we've hit our overall limit, stop checking more channels
+                if message_count >= limit:
+                    break
             
             await progress_msg.edit(content=f"Found {message_count} messages from {member.name}. Generating analysis...")
             
@@ -150,7 +186,12 @@ class AIAnalysisCommands(commands.Cog):
             # Calculate some metrics
             avg_length = sum(message_length) / len(message_length) if message_length else 0
             most_active_hour = max(hour_distribution.items(), key=lambda x: x[1])[0] if hour_distribution else "N/A"
-            most_active_channel = max(channel_distribution.items(), key=lambda x: x[1])[0] if channel_distribution else "N/A"
+            
+            # Get the most active channel safely
+            most_active_channel = "N/A"
+            if channel_distribution:
+                most_active_channel = max(channel_distribution.items(), key=lambda x: x[1])[0]
+                
             most_common_words = [word for word, count in word_count.most_common(10)]
             
             # Get a sample of messages for AI analysis (limit to avoid exceeding token limits)
@@ -195,6 +236,16 @@ class AIAnalysisCommands(commands.Cog):
                           f"**Common words:** {', '.join(most_common_words[:5])}",
                     inline=True
                 )
+                
+                # Add channel distribution if in a guild
+                if ctx.guild and len(channel_distribution) > 0:
+                    top_channels = sorted(channel_distribution.items(), key=lambda x: x[1], reverse=True)[:3]
+                    channel_stats = "\n".join([f"**#{ch}:** {count} msgs" for ch, count in top_channels])
+                    embed.add_field(
+                        name="Top Channels",
+                        value=channel_stats,
+                        inline=False
+                    )
                 
                 embed.set_footer(text=f"Analysis based on {message_count} messages from the past {days} days")
                 
