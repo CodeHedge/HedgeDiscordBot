@@ -1,8 +1,6 @@
 from discord.ext import commands
 import discord
-from . import registry
 
-@registry.register
 class BasicCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

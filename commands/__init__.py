@@ -1,32 +1,16 @@
 from discord.ext import commands
-from typing import List, Type
 import logging
-import importlib
-import pkgutil
 
 logger = logging.getLogger(__name__)
 
-class CommandRegistry:
-    def __init__(self):
-        self.commands: List[Type[commands.Cog]] = []
-
-    def register(self, command_class: Type[commands.Cog]):
-        """Register a new command class"""
-        self.commands.append(command_class)
-        logger.info(f"Registered command class: {command_class.__name__}")
-
-    def setup_commands(self, bot: commands.Bot):
-        """Setup all registered commands"""
-        # Import all command modules
-        for _, name, _ in pkgutil.iter_modules(['commands']):
-            if name != '__init__':
-                importlib.import_module(f'commands.{name}')
-                logger.info(f"Imported command module: {name}")
-
-        # Add all registered cogs
-        for command_class in self.commands:
-            bot.add_cog(command_class(bot))
-            logger.info(f"Added cog: {command_class.__name__}")
-
-# Create a global registry instance
-registry = CommandRegistry() 
+def setup_commands(bot: commands.Bot):
+    """Setup all commands for the bot"""
+    # Import and register all command modules
+    from . import basic, ai_commands, moderation
+    
+    # Add all cogs
+    bot.add_cog(basic.BasicCommands(bot))
+    bot.add_cog(ai_commands.AICommands(bot))
+    bot.add_cog(moderation.ModerationCommands(bot))
+    
+    logger.info("All commands have been loaded and registered") 

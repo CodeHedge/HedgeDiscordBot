@@ -3,9 +3,7 @@ import discord
 import json
 import os
 from config import load_config
-from . import registry
 
-@registry.register
 class ModerationCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 import logging
 from config import load_config
-from commands import registry
+from commands import setup_commands
 from events import EventHandler
 import asyncio
 
@@ -32,9 +32,9 @@ class HedgeBot(commands.Bot):
         await self.add_cog(EventHandler(self))
         logger.info("Added EventHandler cog")
         
-        # Setup all registered commands
-        registry.setup_commands(self)
-        logger.info("Setup all registered commands")
+        # Setup all commands
+        setup_commands(self)
+        logger.info("Setup all commands")
 
 bot = HedgeBot(command_prefix="!", intents=intents)
 

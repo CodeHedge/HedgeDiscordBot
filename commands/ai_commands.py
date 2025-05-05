@@ -1,8 +1,6 @@
 from discord.ext import commands
 from ai import process_ai_request
-from . import registry
 
-@registry.register
 class AICommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
