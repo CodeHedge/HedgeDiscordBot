@@ -3,20 +3,4 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def setup_commands(bot: commands.Bot):
-    """Setup all commands for the bot"""
-    # Import and register all command modules
-    from . import basic, ai_commands, moderation, utility, reminders, ai_analysis, help
-    
-    # Add all cogs
-    bot.add_cog(basic.BasicCommands(bot))
-    bot.add_cog(ai_commands.AICommands(bot))
-    bot.add_cog(moderation.ModerationCommands(bot))
-    bot.add_cog(utility.UtilityCommands(bot))
-    bot.add_cog(reminders.ReminderCommands(bot))
-    bot.add_cog(ai_analysis.AIAnalysisCommands(bot))
-    
-    # The help command should be added last
-    bot.add_cog(help.HelpCommand(bot))
-    
-    logger.info("All commands have been loaded and registered") 
+# Empty __init__.py - cogs are now loaded directly from bot.py 

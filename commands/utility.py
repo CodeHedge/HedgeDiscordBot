@@ -2,12 +2,22 @@ from discord.ext import commands
 import discord
 from datetime import datetime
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UtilityCommands(commands.Cog):
+    """Utility commands for server and user information"""
+    
     def __init__(self, bot):
         self.bot = bot
+        logger.info("UtilityCommands cog initialized")
 
-    @commands.command()
+    @commands.command(
+        name="serverinfo",
+        brief="Display server statistics",
+        help="Shows detailed information about the current Discord server, including member count, channel counts, and server age."
+    )
     async def serverinfo(self, ctx):
         """Display server statistics and information."""
         guild = ctx.guild
@@ -56,7 +66,11 @@ class UtilityCommands(commands.Cog):
         
         await ctx.send(embed=embed)
         
-    @commands.command()
+    @commands.command(
+        name="userinfo",
+        brief="Show user details",
+        help="Displays detailed information about a user, including join date, roles, and status."
+    )
     async def userinfo(self, ctx, member: discord.Member = None):
         """Show detailed information about a user."""
         # If no member is specified, use the command invoker

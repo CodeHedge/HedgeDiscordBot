@@ -5,10 +5,9 @@ from discord.ext import commands
 import logging
 import asyncio
 from config import load_config, load_moderation
-from commands.basic import BasicCommands
-from commands.ai_commands import AICommands
-from commands.moderation import ModerationCommands
 from ai import moderate_message
+import os
+import traceback
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -34,20 +33,53 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# Explicitly load each cog
+async def load_extensions():
+    try:
+        # Import cog classes
+        from commands.basic import BasicCommands
+        from commands.ai_commands import AICommands
+        from commands.moderation import ModerationCommands
+        from commands.utility import UtilityCommands
+        from commands.reminders import ReminderCommands
+        from commands.ai_analysis import AIAnalysisCommands
+        from commands.help import HelpCommand
+        
+        # Add cogs one by one with explicit error handling
+        cogs_to_load = [
+            (BasicCommands, "BasicCommands"),
+            (AICommands, "AICommands"),
+            (ModerationCommands, "ModerationCommands"),
+            (UtilityCommands, "UtilityCommands"),
+            (ReminderCommands, "ReminderCommands"),
+            (AIAnalysisCommands, "AIAnalysisCommands"),
+            (HelpCommand, "HelpCommand")
+        ]
+        
+        for cog_class, cog_name in cogs_to_load:
+            try:
+                await bot.add_cog(cog_class(bot))
+                logger.info(f"Successfully loaded cog: {cog_name}")
+            except Exception as e:
+                logger.error(f"Failed to load cog {cog_name}: {e}")
+                logger.error(traceback.format_exc())
+                
+        logger.info("All cogs have been processed")
+    except Exception as e:
+        logger.error(f"Error during extension loading: {e}")
+        logger.error(traceback.format_exc())
+
 @bot.event
 async def on_ready():
     """Called when the bot is ready"""
     logger.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
     
-    # Add all cogs manually
-    await bot.add_cog(BasicCommands(bot))
-    logger.info("Added BasicCommands cog")
+    # Load all extensions/cogs
+    await load_extensions()
     
-    await bot.add_cog(AICommands(bot))
-    logger.info("Added AICommands cog")
-    
-    await bot.add_cog(ModerationCommands(bot))
-    logger.info("Added ModerationCommands cog")
+    # Log all registered commands for debugging
+    commands_list = [command.name for command in bot.commands]
+    logger.info(f"Registered commands: {', '.join(commands_list)}")
     
     logger.info("Bot is ready and connected to Discord!")
 
@@ -77,5 +109,8 @@ if __name__ == "__main__":
         bot.run(TOKEN)
     except discord.LoginFailure:
         logger.error("Invalid token provided. Please check your configuration.")
+    except Exception as e:
+        logger.error(f"Error running bot: {e}")
+        logger.error(traceback.format_exc())
 
 

@@ -10,10 +10,17 @@ from ai import process_ai_request
 logger = logging.getLogger(__name__)
 
 class AIAnalysisCommands(commands.Cog):
+    """Commands for AI-powered conversation analysis"""
+    
     def __init__(self, bot):
         self.bot = bot
+        logger.info("AIAnalysisCommands cog initialized")
         
-    @commands.command()
+    @commands.command(
+        name="summarize",
+        brief="Summarize recent messages",
+        help="Uses AI to create a concise summary of recent conversation in the current channel."
+    )
     async def summarize(self, ctx, limit: int = 25):
         """Summarize recent conversation in the channel."""
         # Limit the number of messages to fetch (to prevent abuse)
@@ -65,7 +72,11 @@ class AIAnalysisCommands(commands.Cog):
                 logger.error(f"Error generating summary: {e}")
                 await ctx.send("Sorry, I encountered an error while generating the summary.")
     
-    @commands.command()
+    @commands.command(
+        name="analyze",
+        brief="Analyze user's messages",
+        help="Analyzes a user's messaging patterns, word usage, and communication style using AI."
+    )
     async def analyze(self, ctx, member: discord.Member = None, days: int = 7, limit: int = 1000):
         """Analyze a user's message patterns and tone."""
         if member is None:

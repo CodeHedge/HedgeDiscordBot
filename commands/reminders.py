@@ -37,6 +37,8 @@ class Reminder:
         )
 
 class ReminderCommands(commands.Cog):
+    """Commands for setting and managing reminders"""
+    
     def __init__(self, bot):
         self.bot = bot
         self.reminders = []
@@ -44,9 +46,11 @@ class ReminderCommands(commands.Cog):
         self.reminders_file = "reminders.json"
         self.load_reminders()
         self.check_reminders.start()
+        logger.info("ReminderCommands cog initialized")
 
     def cog_unload(self):
         self.check_reminders.cancel()
+        logger.info("ReminderCommands cog unloaded")
 
     def load_reminders(self):
         """Load saved reminders from file"""
@@ -107,7 +111,11 @@ class ReminderCommands(commands.Cog):
     async def before_check_reminders(self):
         await self.bot.wait_until_ready()
 
-    @commands.command()
+    @commands.command(
+        name="remind", 
+        brief="Set a timed reminder",
+        help="Sets a reminder for the specified time. Format: !remind [time] [message]. Time can be specified as 30s (seconds), 10m (minutes), 2h (hours), or 1d (days)."
+    )
     async def remind(self, ctx, time_str: str, *, reminder_text: str):
         """
         Set a reminder. Examples:
@@ -164,7 +172,11 @@ class ReminderCommands(commands.Cog):
         await ctx.send(f"I'll remind you about **{reminder_text}** in **{amount} {time_unit}**.")
         logger.info(f"Set reminder {reminder.id} for user {ctx.author.id} at {end_time}")
 
-    @commands.command()
+    @commands.command(
+        name="reminders",
+        brief="List your reminders",
+        help="Lists all your active reminders with their IDs and remaining time."
+    )
     async def reminders(self, ctx):
         """List all your active reminders"""
         user_reminders = [r for r in self.reminders if r.user_id == ctx.author.id]
@@ -202,7 +214,11 @@ class ReminderCommands(commands.Cog):
             
         await ctx.send(embed=embed)
         
-    @commands.command()
+    @commands.command(
+        name="cancel_reminder",
+        brief="Cancel a reminder",
+        help="Cancels a specific reminder by its ID. Use !reminders to see IDs of your active reminders."
+    )
     async def cancel_reminder(self, ctx, reminder_id: int):
         """Cancel a specific reminder by ID"""
         # Find the reminder
