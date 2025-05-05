@@ -100,11 +100,11 @@ class AIAnalysisCommands(commands.Cog):
             
         # Limit the days and message count to prevent abuse
         if days > 365:
-            await ctx.send("Maximum analysis period is 30 days.")
+            await ctx.send("Maximum analysis period is 365 days.")
             days = 365
             
         if limit > 500:
-            await ctx.send("Maximum message count is 2000.")
+            await ctx.send("Maximum message count is 500.")
             limit = 500
             
         # Inform the user this might take a while
@@ -128,8 +128,15 @@ class AIAnalysisCommands(commands.Cog):
             
             checked_messages = 0
             
-            # Pattern to extract words
+            # Pattern to extract words - only actual words, not URLs or domains
             word_pattern = re.compile(r'\b[a-zA-Z]+\b')
+            
+            # Words to exclude from the common words list (web/URL related)
+            excluded_words = set([
+                'http', 'https', 'www', 'com', 'net', 'org', 'gif', 'jpg', 'png',
+                'tenor', 'view', 'discord', 'youtube', 'twitter', 'twitch', 'imgur',
+                'gfycat', 'streamable', 'reddit', 'image', 'video', 'html'
+            ])
             
             # Get monitored channel IDs from config
             monitored_channel_ids = self.get_monitored_channels()
@@ -180,7 +187,7 @@ class AIAnalysisCommands(commands.Cog):
                         # Extract and count words
                         words = word_pattern.findall(message.content.lower())
                         for word in words:
-                            if len(word) > 2:  # Skip very short words
+                            if len(word) > 2 and word not in excluded_words:  # Skip very short words and excluded words
                                 word_count[word] += 1
                                 
                         total_words += len(words)
@@ -218,17 +225,42 @@ class AIAnalysisCommands(commands.Cog):
             if channel_distribution:
                 most_active_channel = max(channel_distribution.items(), key=lambda x: x[1])[0]
                 
-            most_common_words = [word for word, count in word_count.most_common(10)]
+            # Get meaningful common words (filtered)
+            most_common_words = []
+            for word, count in word_count.most_common(15):  # Get more words to ensure we have enough after filtering
+                if word not in excluded_words and len(most_common_words) < 5:
+                    most_common_words.append(word)
             
+            # If we don't have enough words after filtering, add a message
+            if not most_common_words:
+                most_common_words = ["No significant words found"]
+                
             # Get a sample of messages for AI analysis (limit to avoid exceeding token limits)
             message_sample = user_messages[-50:] if len(user_messages) > 50 else user_messages
             
-            # Prepare the prompt for AI analysis
+            # Calculate % of messages with links/media
+            media_pattern = re.compile(r'https?://\S+|www\.\S+|\.(gif|jpg|png|mp4|webm)\b', re.IGNORECASE)
+            emoji_pattern = re.compile(r'<a?:\w+:\d+>|:\w+:|[\U0001F000-\U0001F9FF]|[\u2600-\u26FF]|[\u2700-\u27BF]')
+            
+            media_count = sum(1 for msg in user_messages if media_pattern.search(msg))
+            emoji_count = sum(1 for msg in user_messages if emoji_pattern.search(msg))
+            
+            media_percent = (media_count / message_count) * 100 if message_count > 0 else 0
+            emoji_percent = (emoji_count / message_count) * 100 if message_count > 0 else 0
+            
+            # Prepare the prompt for AI analysis with more specific instructions
             prompt = (
                 f"Analyze the following message sample from a Discord user named {member.name}. "
-                "Provide a short analysis of their communication style, apparent personality traits based on their writing, "
-                "and the sentiment/tone of their messages. "
-                "Keep the analysis professional, respectful, and around 3-4 sentences long.\n\n"
+                "Your goal is to provide a unique, insightful analysis that captures what sets this user apart from others. "
+                "Consider these aspects:\n"
+                "1. Communication style: How do they structure messages? Are they verbose or concise? Formal or casual?\n"
+                "2. Topics: What specific subjects do they discuss most? Any unique interests?\n"
+                "3. Personality indicators: What traits are evident in their writing style?\n"
+                "4. Tone: What emotions or attitudes come through in their messages?\n"
+                "5. Distinctiveness: What makes their style unique compared to other users?\n\n"
+                f"Additional context: About {media_percent:.1f}% of their messages contain links/media, and {emoji_percent:.1f}% use emojis.\n\n"
+                "Provide a detailed, specific analysis in 3-4 sentences that highlights what makes this user's communication unique. "
+                "Focus on concrete examples rather than generalities. Be respectful but insightful.\n\n"
                 "MESSAGE SAMPLE:\n\n" + "\n".join(message_sample)
             )
             
@@ -259,7 +291,15 @@ class AIAnalysisCommands(commands.Cog):
                     name="Word Usage",
                     value=f"**Total words:** {total_words}\n"
                           f"**Unique words:** {len(word_count)}\n"
-                          f"**Common words:** {', '.join(most_common_words[:5])}",
+                          f"**Common words:** {', '.join(most_common_words)}",
+                    inline=True
+                )
+                
+                # Add media usage statistics
+                embed.add_field(
+                    name="Content Style",
+                    value=f"**Uses media/links:** {media_percent:.1f}%\n"
+                          f"**Uses emojis:** {emoji_percent:.1f}%",
                     inline=True
                 )
                 
