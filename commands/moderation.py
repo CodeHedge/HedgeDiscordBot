@@ -3,7 +3,7 @@ import discord
 import json
 import os
 from config import load_config
-from commands import registry
+from . import registry
 
 @registry.register
 class ModerationCommands(commands.Cog):

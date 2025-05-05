@@ -6,6 +6,7 @@ import logging
 from config import load_config
 from commands import registry
 from events import EventHandler
+import asyncio
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,13 +25,18 @@ intents.reactions = True
 intents.guilds = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+class HedgeBot(commands.Bot):
+    async def setup_hook(self):
+        """Setup hook to initialize cogs and commands"""
+        # Add the event handler
+        await self.add_cog(EventHandler(self))
+        logger.info("Added EventHandler cog")
+        
+        # Setup all registered commands
+        registry.setup_commands(self)
+        logger.info("Setup all registered commands")
 
-# Add the event handler
-bot.add_cog(EventHandler(bot))
-
-# Setup all registered commands
-registry.setup_commands(bot)
+bot = HedgeBot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():

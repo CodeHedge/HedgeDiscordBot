@@ -1,6 +1,8 @@
 from discord.ext import commands
 from typing import List, Type
 import logging
+import importlib
+import pkgutil
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +17,13 @@ class CommandRegistry:
 
     def setup_commands(self, bot: commands.Bot):
         """Setup all registered commands"""
+        # Import all command modules
+        for _, name, _ in pkgutil.iter_modules(['commands']):
+            if name != '__init__':
+                importlib.import_module(f'commands.{name}')
+                logger.info(f"Imported command module: {name}")
+
+        # Add all registered cogs
         for command_class in self.commands:
             bot.add_cog(command_class(bot))
             logger.info(f"Added cog: {command_class.__name__}")

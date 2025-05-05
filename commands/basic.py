@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-from commands import registry
+from . import registry
 
 @registry.register
 class BasicCommands(commands.Cog):

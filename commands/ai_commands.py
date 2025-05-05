@@ -1,6 +1,6 @@
 from discord.ext import commands
 from ai import process_ai_request
-from commands import registry
+from . import registry
 
 @registry.register
 class AICommands(commands.Cog):
