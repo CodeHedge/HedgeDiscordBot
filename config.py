@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+from helper import initialize_offense_files
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def load_config():
             "token": token,
             "channels": [first_channel_id],
             "excluded_users": [],
-            "openai_api_key": None,
+            "openai_api_key": openai_api_key,
             "openai_model": "gpt-3.5-turbo",
             "sudo" : [292142885791465482]  
         }
@@ -37,16 +38,11 @@ def load_config():
     return config
 
 def load_moderation():
-    moderation_path = 'moderation.json'
-    if not os.path.exists(moderation_path):
-        logger.warning(f"Moderation file '{moderation_path}' not found. Creating a new one.")
-        with open(moderation_path, 'w') as f:
-            json.dump({}, f, indent=4)
-        logger.info(f"Moderation file '{moderation_path}' created successfully.")
-    else:
-        logger.info(f"Moderation file '{moderation_path}' loaded successfully.")
-    return moderation_path
-
+    """Initialize all moderation files"""
+    # Use the helper function to initialize all needed files
+    initialize_offense_files()
+    logger.info("Moderation files initialized successfully.")
+    
 def add_channel(channel_id):
     config = load_config()
     if channel_id not in config['channels']:

@@ -4,6 +4,8 @@ import json
 import os
 from config import load_config
 from ai import moderate_message
+from helper import get_recent_offensive_messages
+from datetime import datetime
 
 class ModerationCommands(commands.Cog):
     def __init__(self, bot):
@@ -40,7 +42,7 @@ class ModerationCommands(commands.Cog):
 
     @commands.command()
     async def offenses_user(self, ctx, username: str):
-        """List offenses for a specific user."""
+        """List offenses for a specific user with recent offensive messages."""
         moderation_path = 'moderation.json'
         if not os.path.exists(moderation_path):
             await ctx.send("No moderation data found.")
@@ -61,6 +63,35 @@ class ModerationCommands(commands.Cog):
             description=offense_list,
             color=discord.Color.red()
         )
+
+        # Get recent offensive messages
+        recent_messages = get_recent_offensive_messages(username, 3)
+        
+        if recent_messages:
+            embed.add_field(
+                name="Recent Offensive Messages", 
+                value="Here are the most recent flagged messages:", 
+                inline=False
+            )
+            
+            for i, msg in enumerate(recent_messages):
+                # Format the timestamp
+                try:
+                    timestamp = datetime.fromisoformat(msg["timestamp"]).strftime("%Y-%m-%d %H:%M:%S")
+                except:
+                    timestamp = msg["timestamp"]
+                
+                embed.add_field(
+                    name=f"Message {i+1} - {msg['category']} ({timestamp})", 
+                    value=msg["content"], 
+                    inline=False
+                )
+        else:
+            embed.add_field(
+                name="Recent Messages", 
+                value="No message content available", 
+                inline=False
+            )
 
         await ctx.send(embed=embed)
 
@@ -103,12 +134,16 @@ class ModerationCommands(commands.Cog):
 
         # Clear the moderation.json file
         moderation_path = 'moderation.json'
+        offense_messages_path = 'offense_messages.json'
         with open(moderation_path, 'w') as f:
+            json.dump({}, f, indent=4)
+        with open(offense_messages_path, 'w') as f:
             json.dump({}, f, indent=4)
         await ctx.send("Cleared previous moderation records. Beginning history scan...")
 
         processed_texts = []
         moderation_count = 0
+        flagged_count = 0
 
         for channel_id in self.config['channels']:
             channel = self.bot.get_channel(int(channel_id))
@@ -123,19 +158,37 @@ class ModerationCommands(commands.Cog):
                     try:
                         await moderate_message(message.content, str(message.author))
                         moderation_count += 1
+                        
+                        # Check if any offenses were recorded for this message
+                        if os.path.exists(offense_messages_path):
+                            with open(offense_messages_path, 'r') as f:
+                                messages_data = json.load(f)
+                                if str(message.author) in messages_data:
+                                    for msg in messages_data[str(message.author)]:
+                                        # Rough check if this is the same message
+                                        if message.content == msg.get("content"):
+                                            flagged_count += 1
+                                            break
                     except Exception as e:
                         await ctx.send(f"Error moderating message: {e}")
             else:
                 await ctx.send(f"Could not find channel with ID {channel_id}")
 
-        await ctx.send(f"Processed {moderation_count} messages for moderation.")
+        await ctx.send(f"Processed {moderation_count} messages for moderation. Found {flagged_count} flagged messages.")
 
         if processed_texts:
-            text_summary = "\n\n".join(processed_texts)
+            total_messages = len(processed_texts)
+            text_summary = f"Scanned {total_messages} messages total.\n\n"
+            
+            # Only show a sample of processed texts
+            sample_texts = processed_texts[:5]
+            text_summary += "Sample of scanned messages:\n\n" + "\n\n".join(sample_texts)
+            
             if len(text_summary) > 1900:
                 text_summary = text_summary[:1900] + "\n...[truncated]"
+            
             embed = discord.Embed(
-                title="Scanned Message Texts",
+                title="Scan Summary",
                 description=text_summary,
                 color=discord.Color.green()
             )

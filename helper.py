@@ -1,10 +1,36 @@
 import json
 import os
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-def save_offense(username, category):
+def initialize_offense_files():
+    """Initialize the offense files if they don't exist"""
+    # Regular offense counter file
+    moderation_path = 'moderation.json'
+    if not os.path.exists(moderation_path):
+        with open(moderation_path, 'w') as f:
+            json.dump({}, f, indent=4)
+        logger.info(f"Created moderation file: {moderation_path}")
+    
+    # Offensive messages storage file
+    messages_path = 'offense_messages.json'
+    if not os.path.exists(messages_path):
+        with open(messages_path, 'w') as f:
+            json.dump({}, f, indent=4)
+        logger.info(f"Created offense messages file: {messages_path}")
+
+def save_offense(username, category, message_content=None):
+    """
+    Save an offense and optionally the offensive message
+    
+    Args:
+        username: The username of the offender
+        category: The category of the offense
+        message_content: The content of the offensive message (optional)
+    """
+    # Save to offense counter file
     moderation_path = 'moderation.json'
     if not os.path.exists(moderation_path):
         logger.error(f"Moderation file '{moderation_path}' not found.")
@@ -25,3 +51,70 @@ def save_offense(username, category):
         json.dump(data, f, indent=4)
 
     logger.info(f"Offense recorded: {username} -> {category}")
+    
+    # Save message content if provided
+    if message_content:
+        messages_path = 'offense_messages.json'
+        if not os.path.exists(messages_path):
+            with open(messages_path, 'w') as f:
+                json.dump({}, f, indent=4)
+            logger.info(f"Created offense messages file: {messages_path}")
+            
+        with open(messages_path, 'r') as f:
+            messages_data = json.load(f)
+            
+        if username not in messages_data:
+            messages_data[username] = []
+            
+        # Add the new offensive message with timestamp and category
+        timestamp = datetime.now().isoformat()
+        
+        # Truncate very long messages
+        if len(message_content) > 500:
+            message_content = message_content[:497] + "..."
+            
+        messages_data[username].append({
+            "timestamp": timestamp,
+            "category": category,
+            "content": message_content
+        })
+        
+        # Keep only the 20 most recent messages per user
+        if len(messages_data[username]) > 20:
+            messages_data[username] = sorted(messages_data[username], 
+                                            key=lambda x: x["timestamp"], 
+                                            reverse=True)[:20]
+        
+        with open(messages_path, 'w') as f:
+            json.dump(messages_data, f, indent=4)
+            
+        logger.info(f"Saved offensive message for user: {username}")
+
+def get_recent_offensive_messages(username, limit=3):
+    """
+    Get the most recent offensive messages for a user
+    
+    Args:
+        username: The username to get messages for
+        limit: Maximum number of messages to return
+        
+    Returns:
+        list: List of recent offensive messages
+    """
+    messages_path = 'offense_messages.json'
+    if not os.path.exists(messages_path):
+        logger.warning(f"Offense messages file '{messages_path}' not found.")
+        return []
+        
+    with open(messages_path, 'r') as f:
+        messages_data = json.load(f)
+        
+    if username not in messages_data:
+        return []
+        
+    # Sort messages by timestamp (newest first) and return up to limit
+    sorted_messages = sorted(messages_data[username], 
+                           key=lambda x: x["timestamp"], 
+                           reverse=True)[:limit]
+                           
+    return sorted_messages
