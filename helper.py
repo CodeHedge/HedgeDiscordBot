@@ -108,12 +108,20 @@ def get_recent_offensive_messages(username, limit=3):
         
     with open(messages_path, 'r') as f:
         messages_data = json.load(f)
+    
+    # Debug log to see what data we have
+    logger.info(f"Messages data keys: {list(messages_data.keys())}")
+    logger.info(f"Looking for messages for username: '{username}'")
         
     if username not in messages_data:
+        logger.warning(f"No messages found for user: {username}")
         return []
         
+    user_messages = messages_data[username]
+    logger.info(f"Found {len(user_messages)} messages for user {username}")
+    
     # Sort messages by timestamp (newest first) and return up to limit
-    sorted_messages = sorted(messages_data[username], 
+    sorted_messages = sorted(user_messages, 
                            key=lambda x: x["timestamp"], 
                            reverse=True)[:limit]
                            

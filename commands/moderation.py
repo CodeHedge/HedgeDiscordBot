@@ -55,6 +55,7 @@ class ModerationCommands(commands.Cog):
             await ctx.send(f"No offenses recorded for user: {username}")
             return
 
+        # Create a new embed for just this user
         offenses = data[username]
         offense_list = "\n".join([f"{category}: {count}" for category, count in offenses.items()])
 
@@ -64,16 +65,11 @@ class ModerationCommands(commands.Cog):
             color=discord.Color.red()
         )
 
-        # Get recent offensive messages
+        # Get and display recent offensive messages
         recent_messages = get_recent_offensive_messages(username, 3)
         
         if recent_messages:
-            embed.add_field(
-                name="Recent Offensive Messages", 
-                value="Here are the most recent flagged messages:", 
-                inline=False
-            )
-            
+            message_text = ""
             for i, msg in enumerate(recent_messages):
                 # Format the timestamp
                 try:
@@ -81,15 +77,19 @@ class ModerationCommands(commands.Cog):
                 except:
                     timestamp = msg["timestamp"]
                 
-                embed.add_field(
-                    name=f"Message {i+1} - {msg['category']} ({timestamp})", 
-                    value=msg["content"], 
-                    inline=False
-                )
+                message_text += f"**Message {i+1}** - {msg['category']} ({timestamp})\n"
+                message_text += f"{msg['content']}\n\n"
+            
+            # Add messages as a single field to keep them together
+            embed.add_field(
+                name="Recent Offensive Messages",
+                value=message_text if message_text else "No message content available",
+                inline=False
+            )
         else:
             embed.add_field(
                 name="Recent Messages", 
-                value="No message content available", 
+                value="No offensive messages recorded for this user", 
                 inline=False
             )
 
@@ -196,4 +196,47 @@ class ModerationCommands(commands.Cog):
         else:
             await ctx.send("No messages were processed for moderation.")
 
-        await ctx.send("Finished scanning message history.") 
+        await ctx.send("Finished scanning message history.")
+
+    @commands.command()
+    async def debug_messages(self, ctx):
+        """Debug command to view the raw offense_messages.json file."""
+        if ctx.author.id not in self.sudo_users:
+            await ctx.send("You do not have permission to use this command.")
+            return
+            
+        messages_path = 'offense_messages.json'
+        if not os.path.exists(messages_path):
+            await ctx.send("No offense messages file found.")
+            return
+            
+        try:
+            with open(messages_path, 'r') as f:
+                data = json.load(f)
+                
+            # Create a readable summary
+            summary = "Offense Messages Debug:\n\n"
+            
+            if not data:
+                summary += "No data in offense_messages.json"
+            else:
+                summary += f"Users with stored messages: {list(data.keys())}\n\n"
+                
+                for username, messages in data.items():
+                    summary += f"User: {username} - {len(messages)} messages\n"
+                    
+                    if messages:
+                        # Show first message as example
+                        first_msg = messages[0]
+                        summary += f"Example: {first_msg.get('category')} - {first_msg.get('content')[:50]}...\n\n"
+            
+            # Split into chunks if needed
+            if len(summary) > 1900:
+                chunks = [summary[i:i+1900] for i in range(0, len(summary), 1900)]
+                for chunk in chunks:
+                    await ctx.send(f"```\n{chunk}\n```")
+            else:
+                await ctx.send(f"```\n{summary}\n```")
+                
+        except Exception as e:
+            await ctx.send(f"Error reading offense messages file: {e}") 
