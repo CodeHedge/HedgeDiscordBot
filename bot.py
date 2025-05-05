@@ -2,11 +2,10 @@
 
 import discord
 from discord.ext import commands
-import asyncio
 import logging
-from config import load_config, load_moderation  # Import the load_config and load_moderation functions
-from commands import setup_commands  # Import the setup_commands function
-from ai import moderate_message  # Import the moderate_message function
+from config import load_config
+from commands import registry
+from events import EventHandler
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,11 +15,6 @@ logger.setLevel(logging.INFO)
 # Load the configuration
 config = load_config()
 TOKEN = config['token']
-CHANNELS = config['channels']
-EXCLUDED_USERS = config.get('excluded_users', [])
-
-# Load the moderation file
-load_moderation()
 
 # Initialize Discord bot with all necessary intents
 intents = discord.Intents.default()
@@ -32,8 +26,11 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Load commands
-setup_commands(bot)
+# Add the event handler
+bot.add_cog(EventHandler(bot))
+
+# Setup all registered commands
+registry.setup_commands(bot)
 
 @bot.event
 async def on_ready():
@@ -47,7 +44,7 @@ async def on_message(message):
         return
 
     # Check if the message is from a monitored channel (only for non-DM messages)
-    if message.guild and str(message.channel.id) in CHANNELS:
+    if message.guild and str(message.channel.id) in config['channels']:
         logger.info(f"Message received in monitored channel {message.channel.name}: {message.content}")
 
         # Run the message through the moderation API
