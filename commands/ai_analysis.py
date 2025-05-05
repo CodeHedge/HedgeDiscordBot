@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timedelta
 import logging
 from ai import process_ai_request
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -72,13 +73,28 @@ class AIAnalysisCommands(commands.Cog):
                 logger.error(f"Error generating summary: {e}")
                 await ctx.send("Sorry, I encountered an error while generating the summary.")
     
+    # Helper function to get monitored channels
+    def get_monitored_channels(self):
+        try:
+            with open('config.json', 'r') as f:
+                config = json.load(f)
+                return config.get('channels', [])
+        except Exception as e:
+            logger.error(f"Error loading monitored channels: {e}")
+            return []
+    
     @commands.command(
         name="analyze",
         brief="Analyze user's messages",
-        help="Analyzes a user's messaging patterns, word usage, and communication style using AI."
+        help="Analyzes this user's messaging patterns, word usage, and communication style."
     )
     async def analyze(self, ctx, member: discord.Member = None, days: int = 7, limit: int = 1000):
         """Analyze a user's message patterns and tone."""
+        # Check if this is a DM channel
+        if not ctx.guild:
+            await ctx.send("This command can only be used in server channels, not in DMs.")
+            return
+            
         if member is None:
             member = ctx.author
             
@@ -115,22 +131,33 @@ class AIAnalysisCommands(commands.Cog):
             # Pattern to extract words
             word_pattern = re.compile(r'\b[a-zA-Z]+\b')
             
-            # Get all accessible text channels in the guild
+            # Get monitored channel IDs from config
+            monitored_channel_ids = self.get_monitored_channels()
+            
+            # Get the channels to check based on monitored channel IDs
             channels_to_check = []
-            if ctx.guild:
-                for channel in ctx.guild.text_channels:
-                    # Only include channels the bot can read
-                    if channel.permissions_for(ctx.guild.me).read_message_history:
+            for channel_id in monitored_channel_ids:
+                try:
+                    # Convert channel ID to integer if it's a string
+                    if isinstance(channel_id, str):
+                        channel_id = int(channel_id)
+                        
+                    channel = self.bot.get_channel(channel_id)
+                    if channel and channel.guild == ctx.guild and channel.permissions_for(ctx.guild.me).read_message_history:
                         channels_to_check.append(channel)
-            else:
-                # In DMs, just use the current channel
-                channels_to_check = [ctx.channel]
+                except Exception as e:
+                    logger.error(f"Error getting channel {channel_id}: {e}")
+            
+            # If no monitored channels are found in this server, inform the user
+            if not channels_to_check:
+                await progress_msg.edit(content="No monitored channels found in this server. Cannot analyze messages.")
+                return
                 
             # Distribute the message limit across channels
             per_channel_limit = max(100, limit // max(1, len(channels_to_check)))
             
             # Update progress message to show start of analysis
-            await progress_msg.edit(content=f"Analyzing {member.name}'s messages across {len(channels_to_check)} channels...")
+            await progress_msg.edit(content=f"Analyzing {member.name}'s messages across {len(channels_to_check)} monitored channels...")
             
             # Loop through each channel
             for channel in channels_to_check:
