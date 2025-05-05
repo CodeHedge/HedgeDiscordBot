@@ -3,10 +3,12 @@
 import discord
 from discord.ext import commands
 import logging
-from config import load_config
-from commands import setup_commands
-from events import EventHandler
 import asyncio
+from config import load_config, load_moderation
+from commands.basic import BasicCommands
+from commands.ai_commands import AICommands
+from commands.moderation import ModerationCommands
+from ai import moderate_message
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,6 +18,11 @@ logger.setLevel(logging.INFO)
 # Load the configuration
 config = load_config()
 TOKEN = config['token']
+CHANNELS = config['channels']
+EXCLUDED_USERS = config.get('excluded_users', [])
+
+# Load the moderation file
+load_moderation()
 
 # Initialize Discord bot with all necessary intents
 intents = discord.Intents.default()
@@ -25,22 +32,23 @@ intents.reactions = True
 intents.guilds = True
 intents.members = True
 
-class HedgeBot(commands.Bot):
-    async def setup_hook(self):
-        """Setup hook to initialize cogs and commands"""
-        # Add the event handler
-        await self.add_cog(EventHandler(self))
-        logger.info("Added EventHandler cog")
-        
-        # Setup all commands
-        setup_commands(self)
-        logger.info("Setup all commands")
-
-bot = HedgeBot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
+    """Called when the bot is ready"""
     logger.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    
+    # Add all cogs manually
+    await bot.add_cog(BasicCommands(bot))
+    logger.info("Added BasicCommands cog")
+    
+    await bot.add_cog(AICommands(bot))
+    logger.info("Added AICommands cog")
+    
+    await bot.add_cog(ModerationCommands(bot))
+    logger.info("Added ModerationCommands cog")
+    
     logger.info("Bot is ready and connected to Discord!")
 
 @bot.event
@@ -50,7 +58,7 @@ async def on_message(message):
         return
 
     # Check if the message is from a monitored channel (only for non-DM messages)
-    if message.guild and str(message.channel.id) in config['channels']:
+    if message.guild and str(message.channel.id) in CHANNELS:
         logger.info(f"Message received in monitored channel {message.channel.name}: {message.content}")
 
         # Run the message through the moderation API
@@ -60,7 +68,7 @@ async def on_message(message):
         if "hello bot" in message.content.lower():
             await message.channel.send(f"Hello, {message.author.mention}!")
 
-    # Process commands regardless of the channel type (guild or DM)
+    # Process commands
     await bot.process_commands(message)
 
 # Run the bot
