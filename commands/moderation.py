@@ -3,6 +3,7 @@ import discord
 import json
 import os
 from config import load_config
+from ai import moderate_message
 
 class ModerationCommands(commands.Cog):
     def __init__(self, bot):
@@ -107,6 +108,7 @@ class ModerationCommands(commands.Cog):
         await ctx.send("Cleared previous moderation records. Beginning history scan...")
 
         processed_texts = []
+        moderation_count = 0
 
         for channel_id in self.config['channels']:
             channel = self.bot.get_channel(int(channel_id))
@@ -116,9 +118,17 @@ class ModerationCommands(commands.Cog):
                     if not message.content:
                         continue
                     processed_texts.append(message.content)
-                    await self.bot.process_commands(message)
+                    
+                    # Send to moderation API
+                    try:
+                        await moderate_message(message.content, str(message.author))
+                        moderation_count += 1
+                    except Exception as e:
+                        await ctx.send(f"Error moderating message: {e}")
             else:
                 await ctx.send(f"Could not find channel with ID {channel_id}")
+
+        await ctx.send(f"Processed {moderation_count} messages for moderation.")
 
         if processed_texts:
             text_summary = "\n\n".join(processed_texts)
