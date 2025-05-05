@@ -90,9 +90,9 @@ class AIAnalysisCommands(commands.Cog):
     )
     async def analyze(self, ctx, member: discord.Member = None, days: int = 7, limit: int = 1000):
         """Analyze a user's message patterns and tone."""
-        # Check if this is a DM channel
-        if not ctx.guild:
-            await ctx.send("This command can only be used in server channels, not in DMs.")
+        # If in DMs, member must be specified
+        if not ctx.guild and not member:
+            await ctx.send("When using this command in DMs, you must specify a user to analyze.")
             return
             
         if member is None:
@@ -105,7 +105,7 @@ class AIAnalysisCommands(commands.Cog):
             
         if limit > 2000:
             await ctx.send("Maximum message count is 2000.")
-            limit = 2000
+            limit = 500
             
         # Inform the user this might take a while
         progress_msg = await ctx.send(f"Analyzing {member.name}'s messages from the past {days} days... This may take a moment.")
@@ -143,14 +143,14 @@ class AIAnalysisCommands(commands.Cog):
                         channel_id = int(channel_id)
                         
                     channel = self.bot.get_channel(channel_id)
-                    if channel and channel.guild == ctx.guild and channel.permissions_for(ctx.guild.me).read_message_history:
+                    if channel and channel.permissions_for(channel.guild.me).read_message_history:
                         channels_to_check.append(channel)
                 except Exception as e:
                     logger.error(f"Error getting channel {channel_id}: {e}")
             
-            # If no monitored channels are found in this server, inform the user
+            # If no monitored channels are found, inform the user
             if not channels_to_check:
-                await progress_msg.edit(content="No monitored channels found in this server. Cannot analyze messages.")
+                await progress_msg.edit(content="No monitored channels found. Cannot analyze messages.")
                 return
                 
             # Distribute the message limit across channels
@@ -172,9 +172,8 @@ class AIAnalysisCommands(commands.Cog):
                         user_messages.append(message.content)
                         message_length.append(len(message.content))
                         
-                        # Safely handle channel name for both guild channels and DMs
-                        channel_name = getattr(channel, 'name', 'Direct Messages')
-                        channel_distribution[channel_name] += 1
+                        # Always use the channel name (monitored channels are always text channels in servers)
+                        channel_distribution[channel.name] += 1
                         
                         hour_distribution[message.created_at.hour] += 1
                         
@@ -197,7 +196,7 @@ class AIAnalysisCommands(commands.Cog):
                             break
                             
                 except Exception as e:
-                    logger.error(f"Error analyzing channel {getattr(channel, 'name', 'DM')}: {e}")
+                    logger.error(f"Error analyzing channel {channel.name}: {e}")
                     continue
                     
                 # If we've hit our overall limit, stop checking more channels
