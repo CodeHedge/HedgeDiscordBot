@@ -88,7 +88,7 @@ class AICommands(commands.Cog):
         
         async with ctx.typing():
             # Collect messages from the last 30 days
-            days = 30
+            days = 3000
             cutoff_date = datetime.utcnow() - timedelta(days=days)
             
             # Get monitored channel IDs from config
