@@ -69,7 +69,7 @@ class AICommands(commands.Cog):
                 
             # Collect up to 100 messages from the user
             user_messages = []
-            limit = 500
+            limit = 5000
             per_channel_limit = max(50, limit // len(channels_to_check))
             message_count = 0
             

@@ -48,7 +48,7 @@ class CustomHelpCommand(commands.HelpCommand):
     # Category descriptions
     CATEGORY_DESCRIPTIONS = {
         "BasicCommands": "Essential bot commands",
-        "AICommands": "Interact with the AI assistant",
+        "AICommands": "Interact with the AI assistant, generate responses, and roast users",
         "ModerationCommands": "Server moderation and management",
         "UtilityCommands": "Useful server and user information",
         "ReminderCommands": "Set and manage reminders",
@@ -65,7 +65,8 @@ class CustomHelpCommand(commands.HelpCommand):
             "Try using the `!analyze` command to see insights about your messaging style.",
             "Set reminders with `!remind 1h Do something` to get notified later.",
             "Use `!summarize` to get an AI-generated summary of recent conversation.",
-            "Check server stats with `!serverinfo` or user info with `!userinfo`."
+            "Check server stats with `!serverinfo` or user info with `!userinfo`.",
+            "Generate savage roasts with `!roast @User` to playfully tease your friends."
         ]
         random_tip = random.choice(tips)
         
@@ -173,6 +174,14 @@ class CustomHelpCommand(commands.HelpCommand):
                 value=(
                     "`!userinfo` - Show your own info\n"
                     "`!userinfo @User` - Show info about mentioned user"
+                ),
+                inline=False
+            )
+        elif command.name == "roast":
+            embed.add_field(
+                name="📋 Examples",
+                value=(
+                    "`!roast @User` - Generate a brutal roast of the mentioned user based on their message history"
                 ),
                 inline=False
             )
