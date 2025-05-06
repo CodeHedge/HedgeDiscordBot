@@ -5,6 +5,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 import re
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,50 @@ class AICommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         logger.info("AICommands cog initialized")
+        
+        # Collection of brutal roast prompts to randomly choose from
+        self.roast_prompts = [
+            "Roast this Discord user so brutally that even Gordon Ramsay would wince. No mercy.",
+            "Create a comedy central style roast of this Discord user that would make them question their life choices.",
+            "Channel your inner insult comic and absolutely demolish this Discord user with the most savage roast possible.",
+            "Destroy this Discord user with a roast so brutal their ancestors will feel it.",
+            "Craft an absolutely devastating roast that exposes every flaw in this Discord user's communication style.",
+            "Write a roast so savage that it should come with a emotional damage warning.",
+            "Eviscerate this Discord user with the most cutting, brutal roast you can devise based on their messages.",
+            "Create a soul-crushing roast that hits this Discord user where it hurts the most - their personality.",
+            "Compose a roast so merciless that it would make professional comedians stand up and applaud.",
+            "Verbally incinerate this Discord user like they're at a celebrity roast and everyone hates them.",
+            "Obliterate this Discord user's ego with a roast that leaves no aspect of their personality unscathed.",
+            "Craft a roast so devastating it would make this Discord user reconsider every message they've ever sent.",
+            "Perform a tactical nuclear strike on this Discord user's self-esteem with your most ruthless roast.",
+            "Write a roast that's so harsh this Discord user will need therapy after reading it.",
+            "Create a diabolically brutal character assassination based on this Discord user's message history.",
+            "Compose a roast so searingly vicious that it borders on a war crime.",
+            "Verbally dismantle this Discord user with a roast that targets their deepest communication insecurities.",
+            "Annihilate this Discord user's online persona with a roast that leaves nothing but ashes.",
+            "Craft a roast that hits so hard this Discord user will feel it in their soul.",
+            "Absolutely eviscerate this Discord user with a roast that's equal parts hilarious and devastating.",
+            "Write a roast so savage that it should be classified as a weapon of mass destruction.",
+            "Create a merciless takedown that exposes everything embarrassing about this Discord user's messages.",
+            "Compose a roast that's so brutal it makes typical internet trolls look like kindly grandmothers.",
+            "Destroy this Discord user with such precision that they'll never emotionally recover.",
+            "Craft an apocalyptic roast that leaves no stone unturned and no flaw unmentioned.",
+            "Roast this Discord user so thoroughly they'll need to change their username and start fresh.",
+            "Brutalize this Discord user with a roast that's so accurate it feels like mind reading.",
+            "Write a roast so devastating that Reddit's r/RoastMe would give it a standing ovation.",
+            "Create a character assassination so complete that this Discord user will question their online identity.",
+            "Compose a roast that's not just brutal, but surgically precise in targeting their messaging habits.",
+            "Craft a savagely honest deconstruction of this Discord user's entire online presence.",
+            "Deliver a roast so harsh that the user will need to apply ice to the burn for weeks.",
+            "Write a soul-crushing analysis disguised as a comedy roast that will haunt this user.",
+            "Create a roast so savage it should be considered a violation of the Geneva Convention.",
+            "Compose a roast that exposes this Discord user's messaging quirks with devastating accuracy.",
+            "Absolutely disintegrate this user's self-image with a roast based on their message history.",
+            "Craft a psychological takedown disguised as a comedic roast that leaves no survivors.",
+            "Write a roast that's so brutal it makes professional insult comics look like amateurs.",
+            "Deliver a ego-destroying analysis of this Discord user's communication patterns.",
+            "Roast this Discord user with the savagery of a hungry lion and the precision of a surgeon."
+        ]
 
     @commands.command()
     async def prompt(self, ctx, *, prompt: str):
@@ -43,7 +88,7 @@ class AICommands(commands.Cog):
         
         async with ctx.typing():
             # Collect messages from the last 30 days
-            days = 3000
+            days = 30
             cutoff_date = datetime.utcnow() - timedelta(days=days)
             
             # Get monitored channel IDs from config
@@ -69,7 +114,7 @@ class AICommands(commands.Cog):
                 
             # Collect up to 100 messages from the user
             user_messages = []
-            limit = 5000
+            limit = 500
             per_channel_limit = max(50, limit // len(channels_to_check))
             message_count = 0
             
@@ -138,9 +183,12 @@ class AICommands(commands.Cog):
             # Get a sample of messages
             message_sample = user_messages[-50:] if len(user_messages) > 50 else user_messages
             
+            # Select a random roast prompt
+            roast_base_prompt = random.choice(self.roast_prompts)
+            
             # Prepare the prompt for the roast
             prompt = (
-                f"Roast the absolute shit out of this Discord user based on their message history. Be BRUTAL, savage, and hilarious.\n\n"
+                f"{roast_base_prompt}\n\n"
                 f"User: {member.name}\n"
                 f"Basic stats:\n"
                 f"- Sends about {stats['avg_length']:.1f} words per message\n"
@@ -149,7 +197,6 @@ class AICommands(commands.Cog):
                 f"- Types in ALL CAPS {stats['caps_rate']:.2f} times per message\n"
                 f"- Uses exclamation points {stats['exclamation_rate']:.2f} times per message\n"
                 f"- Asks questions {stats['question_rate']:.2f} times per message\n\n"
-                f"Create a hilarious, ruthless roast that would make a comedian proud. Don't hold back AT ALL. "
                 f"Focus on their writing style, interests, and quirks visible in these messages. "
                 f"Be creative, specific, and HARSH. Make it personal based on their actual messages. "
                 f"Include at least one sarcastic compliment that's actually a burn. Keep it to a short paragraph.\n\n"
