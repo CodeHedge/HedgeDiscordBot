@@ -22,7 +22,11 @@ def load_config():
             "excluded_users": [],
             "openai_api_key": openai_api_key,
             "openai_model": "gpt-3.5-turbo",
-            "sudo" : [292142885791465482]  
+            "sudo" : [292142885791465482],
+            "analyze_command": {
+                "max_days": 365,
+                "max_messages": 500
+            }
         }
         
         # Write the config to the file
@@ -34,8 +38,30 @@ def load_config():
         # Load the existing config file
         with open(config_path, 'r') as f:
             config = json.load(f)
+            
+        # Ensure analyze_command configuration exists
+        if "analyze_command" not in config:
+            config["analyze_command"] = {
+                "max_days": 365,
+                "max_messages": 500
+            }
+            # Save the updated config
+            with open(config_path, 'w') as f:
+                json.dump(config, f, indent=4)
+            logger.info("Added analyze command configuration to config.json")
 
     return config
+
+def get_analyze_limits():
+    """Get the limits for the analyze command"""
+    config = load_config()
+    analyze_config = config.get("analyze_command", {})
+    
+    # Default values if not found
+    max_days = analyze_config.get("max_days", 365)
+    max_messages = analyze_config.get("max_messages", 500)
+    
+    return max_days, max_messages
 
 def load_moderation():
     """Initialize all moderation files"""

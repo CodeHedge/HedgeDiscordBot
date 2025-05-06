@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from ai import process_ai_request
 import json
+from config import get_analyze_limits
 
 logger = logging.getLogger(__name__)
 
@@ -98,14 +99,17 @@ class AIAnalysisCommands(commands.Cog):
         if member is None:
             member = ctx.author
             
-        # Limit the days and message count to prevent abuse
-        if days > 365:
-            await ctx.send("Maximum analysis period is 365 days.")
-            days = 365
+        # Get limits from configuration
+        max_days, max_messages = get_analyze_limits()
+        
+        # Limit the days and message count based on configuration
+        if days > max_days:
+            await ctx.send(f"Maximum analysis period is {max_days} days.")
+            days = max_days
             
-        if limit > 500:
-            await ctx.send("Maximum message count is 500.")
-            limit = 500
+        if limit > max_messages:
+            await ctx.send(f"Maximum message count is {max_messages}.")
+            limit = max_messages
             
         # Inform the user this might take a while
         progress_msg = await ctx.send(f"Analyzing {member.name}'s messages from the past {days} days... This may take a moment.")
@@ -135,7 +139,10 @@ class AIAnalysisCommands(commands.Cog):
             excluded_words = set([
                 'http', 'https', 'www', 'com', 'net', 'org', 'gif', 'jpg', 'png',
                 'tenor', 'view', 'discord', 'youtube', 'twitter', 'twitch', 'imgur',
-                'gfycat', 'streamable', 'reddit', 'image', 'video', 'html'
+                'gfycat', 'streamable', 'reddit', 'image', 'video', 'html', 'and','the',
+                'is','in','at','to','of','is','a','for','by','this','that','it','with',
+                'as','was','will','can','could','may','might','must','should','would',
+                'shall','do','does','did','done','been','being'
             ])
             
             # Get monitored channel IDs from config
