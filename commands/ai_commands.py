@@ -30,17 +30,18 @@ class AICommands(commands.Cog):
             "Roast them like a group chat admin who's about to kick them for vibes alone.",
             "Roast like a lawyer delivering closing arguments on why they should be banned from social interaction.",
             "Roast them like their personality was crowd-sourced from bad Reddit takes.",
-            "Roast them like a life coach who just gave up mid-session."
+            "Roast them like a life coach who just gave up mid-session.",
+            "Roast them like you're the human embodiment of the lounge server."
         ]
         
         # Server context for personalized roasts
         self.server_context = {
             "group_name": "The Lounge",
             "members": {
-                "_hedge": {"name": "Trent", "role": "Techie, engineer", "note": "Likes to build things, is a bit of a nerd"},
-                "mathew8814": {"name": "Mathew", "role": "Server owner and group glue"},
-                "phantasmi": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "yoloidkphone", "note": "Likes weed, a bit of a stoner"},
-                "yoloidkphone": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "phantasmi", "note": "Likes weed, a bit of a stoner"},
+                "_hedge": {"name": "Trent", "role": "Techie, engineer", "note": "Likes to build things, is a bit of a nerd."},
+                "mathew8814": {"name": "Mathew", "role": "Server owner and group glue", "note": "Likes weed."},
+                "phantasmi": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "yoloidkphone", "note": "Likes weed"},
+                "yoloidkphone": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "phantasmi", "note": "Likes weed"},
                 "suppras": {"name": "Teagan", "role": "Singer with loud personality", "note": "Sometimes ignores/doesn't hear others. Is in a band."},
                 "daviedarco": {"name": "David", "role": "IT professional in private military sector", "note": "Rarely active"},
                 "anthonyrev": {"name": "Anthony", "role": "Young member, car enthusiast", "note": "Lost father do not make parent roasts, has lizard named Octane"}
@@ -162,12 +163,11 @@ class AICommands(commands.Cog):
                 f"{chr(10).join(self.roast_scenarios)}\n\n"
                 f"IMPORTANT RULES:\n"
                 f"1. DO NOT make parent-related jokes about Anthony (anthonyrev)\n"
-                f"2. If roasting Q (phantasmi/yoloidkphone), consider messages from both accounts\n"
-                f"3. Be creative and specific based on their actual messages\n"
-                f"4. Include at least one sarcastic compliment that's actually a burn\n"
-                f"5. Make it personal\n\n"
-                f"6. Do not say which scenario you chose\n\n"
-                f"7. Do not repeat notes verbatim. Use them as a guide\n\n"
+                f"2. Be creative and specific based on their actual messages\n"
+                f"3. Include at least one sarcastic compliment that's actually a burn\n"
+                f"4. Make it personal\n\n"
+                f"5. Do not say which scenario you chose\n\n"
+                f"6. Do not repeat notes verbatim. Use them as a guide\n\n"
                 f"USER MESSAGES:\n"
                 f"{chr(10).join(user_messages)}\n\n"
                 f"Now, analyze these messages and choose the most effective roast scenario. "
