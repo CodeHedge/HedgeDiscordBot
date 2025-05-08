@@ -40,11 +40,11 @@ class AICommands(commands.Cog):
             "members": {
                 "_hedge": {"name": "Trent", "role": "Techie, engineer", "note": "Likes to build things, is a bit of a nerd."},
                 "mathew8814": {"name": "Mathew", "role": "Server owner and group glue", "note": "Likes weed."},
-                "phantasmi": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "yoloidkphone", "note": "Likes weed"},
-                "yoloidkphone": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "phantasmi", "note": "Likes weed"},
+                "phantasmi": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnt really tank or heal", "alt": "yoloidkphone", "note": "Likes weed"},
+                "yoloidkphone": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnt really tank or heal", "alt": "phantasmi", "note": "Likes weed"},
                 "suppras": {"name": "Teagan", "role": "Singer with loud personality", "note": "Sometimes ignores/doesn't hear others. Is in a band."},
-                "daviedarco": {"name": "David", "role": "IT professional in private military sector", "note": "Rarely active"},
-                "anthonyrev": {"name": "Anthony", "role": "Young member, car enthusiast", "note": "Lost father do not make parent roasts, has lizard named Octane"}
+                "daviedarco": {"name": "David", "role": "IT professional in private military sector", "note": "Rarely active. Likes Destiny 2."},
+                "anthonyrev": {"name": "Anthony", "role": "Young low 20s, car enthusiast", "note": "Lost father do not make parent roasts, has lizard named Octane"}
             }
         }
 
@@ -167,7 +167,8 @@ class AICommands(commands.Cog):
                 f"3. Include at least one sarcastic compliment that's actually a burn\n"
                 f"4. Make it personal\n\n"
                 f"5. Do not say which scenario you chose\n\n"
-                f"6. Do not repeat notes verbatim. Use them as a guide\n\n"
+                f"6. Do not repeat notes OR role verbatim. Use them as a guide\n\n"
+                f"7. Keep it 10 or less sentences.\n\n"
                 f"USER MESSAGES:\n"
                 f"{chr(10).join(user_messages)}\n\n"
                 f"Now, analyze these messages and choose the most effective roast scenario. "
