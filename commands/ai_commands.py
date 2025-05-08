@@ -37,13 +37,13 @@ class AICommands(commands.Cog):
         self.server_context = {
             "group_name": "The Lounge",
             "members": {
-                "_hedge": {"name": "Trent", "role": "Tech mogul and bot creator"},
+                "_hedge": {"name": "Trent", "role": "Techie"},
                 "mathew8814": {"name": "Mathew", "role": "Server owner and group glue"},
-                "phantasmi": {"name": "Q", "role": "MMO and competitive player", "alt": "yoloidkphone"},
-                "yoloidkphone": {"name": "Q", "role": "MMO and competitive player", "alt": "phantasmi"},
+                "phantasmi": {"name": "Q", "role": "MMO player and competitive", "alt": "yoloidkphone"},
+                "yoloidkphone": {"name": "Q", "role": "MMO player and competitive", "alt": "phantasmi"},
                 "suppras": {"name": "Teagan", "role": "Singer with loud personality", "note": "Sometimes ignores/doesn't hear others"},
                 "daviedarco": {"name": "David", "role": "IT professional in private military sector", "note": "Rarely active"},
-                "anthonyrev": {"name": "Anthony", "role": "Young member", "note": "Lost father, has lizard named Octane"}
+                "anthonyrev": {"name": "Anthony", "role": "Young member", "note": "Lost father do not make parent roasts, has lizard named Octane"}
             }
         }
 
@@ -162,9 +162,10 @@ class AICommands(commands.Cog):
                 f"3. Be creative and specific based on their actual messages\n"
                 f"4. Include at least one sarcastic compliment that's actually a burn\n"
                 f"5. Keep it to a short paragraph\n"
-                f"6. Make it personal but not mean-spirited - this is among friends\n\n"
+                f"6. Make it personal\n\n"
+                f"6. Do not say which scenario you chose\n\n"
                 f"USER MESSAGES:\n"
-                f"{chr(10).join(user_messages[-50:] if len(user_messages) > 50 else user_messages)}\n\n"
+                f"{chr(10).join(user_messages)}\n\n"
                 f"Now, analyze these messages and choose the most effective roast scenario. "
                 f"Then deliver a brutal but funny roast in that style, incorporating specific details from their messages."
             )
@@ -187,7 +188,7 @@ class AICommands(commands.Cog):
                 logger.info(f"Generated roast for {member.name} based on {message_count} messages")
             except Exception as e:
                 logger.error(f"Error generating roast: {e}")
-                await ctx.send("I failed to roast them. They're clearly not even worth the effort.")
+                await ctx.send("I failed to roast them. They're clearly not even worth the effort. (There was a program exception, check logs idiot)")
         
         # Delete the progress message since we've sent the result
         await progress_msg.delete() 
