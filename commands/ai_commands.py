@@ -37,13 +37,13 @@ class AICommands(commands.Cog):
         self.server_context = {
             "group_name": "The Lounge",
             "members": {
-                "_hedge": {"name": "Trent", "role": "Techie"},
+                "_hedge": {"name": "Trent", "role": "Techie, engineer", "note": "Likes to build things, is a bit of a nerd"},
                 "mathew8814": {"name": "Mathew", "role": "Server owner and group glue"},
-                "phantasmi": {"name": "Q", "role": "MMO player and competitive", "alt": "yoloidkphone"},
-                "yoloidkphone": {"name": "Q", "role": "MMO player and competitive", "alt": "phantasmi"},
-                "suppras": {"name": "Teagan", "role": "Singer with loud personality", "note": "Sometimes ignores/doesn't hear others"},
+                "phantasmi": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "yoloidkphone", "note": "Likes weed, a bit of a stoner"},
+                "yoloidkphone": {"name": "Q", "role": "MMO player and competitive, mains shadowpriest, doesnnt really tank or heal", "alt": "phantasmi", "note": "Likes weed, a bit of a stoner"},
+                "suppras": {"name": "Teagan", "role": "Singer with loud personality", "note": "Sometimes ignores/doesn't hear others. Is in a band."},
                 "daviedarco": {"name": "David", "role": "IT professional in private military sector", "note": "Rarely active"},
-                "anthonyrev": {"name": "Anthony", "role": "Young member", "note": "Lost father do not make parent roasts, has lizard named Octane"}
+                "anthonyrev": {"name": "Anthony", "role": "Young member, car enthusiast", "note": "Lost father do not make parent roasts, has lizard named Octane"}
             }
         }
 
@@ -111,6 +111,7 @@ class AICommands(commands.Cog):
                 member_info = self.server_context["members"][member.name]
                 if "alt" in member_info:
                     alt_username = member_info["alt"]
+                    logger.info(f"Found alt account for {member.name}: {alt_username}")
             
             # Loop through each channel
             for channel in channels_to_check:
@@ -121,9 +122,12 @@ class AICommands(commands.Cog):
                             continue
                             
                         # Include messages from both main and alt account if applicable
-                        if message.author.id == member.id or (alt_username and message.author.name == alt_username):
+                        if (message.author.id == member.id or 
+                            (alt_username and message.author.name == alt_username) or
+                            (member.name == "phantasmi" and message.author.name == "yoloidkphone") or
+                            (member.name == "yoloidkphone" and message.author.name == "phantasmi")):
                             if message.content:
-                                user_messages.append(message.content)
+                                user_messages.append(f"[{message.author.name}] {message.content}")
                                 message_count += 1
                             
                         if message_count >= limit:
@@ -161,9 +165,9 @@ class AICommands(commands.Cog):
                 f"2. If roasting Q (phantasmi/yoloidkphone), consider messages from both accounts\n"
                 f"3. Be creative and specific based on their actual messages\n"
                 f"4. Include at least one sarcastic compliment that's actually a burn\n"
-                f"5. Keep it to a short paragraph\n"
-                f"6. Make it personal\n\n"
+                f"5. Make it personal\n\n"
                 f"6. Do not say which scenario you chose\n\n"
+                f"7. Do not repeat notes verbatim. Use them as a guide\n\n"
                 f"USER MESSAGES:\n"
                 f"{chr(10).join(user_messages)}\n\n"
                 f"Now, analyze these messages and choose the most effective roast scenario. "
