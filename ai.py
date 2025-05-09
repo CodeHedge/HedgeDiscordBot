@@ -24,8 +24,8 @@ async def process_ai_request(prompt: str) -> str:
             lambda: client.chat.completions.create(
                 model=openai_model,
                 messages=[{"role": "user", "content": prompt}],
-                top_p=0.75,
-                max_tokens=10000
+                top_p=0.85,
+                max_tokens=5000
             )
         )
         return response.choices[0].message.content.strip()
