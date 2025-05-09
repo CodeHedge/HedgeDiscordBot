@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta
 import re
 import random
+from config import member_manager
 
 logger = logging.getLogger(__name__)
 
@@ -37,85 +38,6 @@ class AICommands(commands.Cog):
             "Roast them like a life coach who just gave up mid-session.",
             "Roast them like you're the human embodiment of the lounge server.",
         ]
-
-        # Server context for personalized roasts
-        self.server_context = {
-            "group_name": "The Lounge",
-            "members": {
-                "_hedge": {
-                    "name": "Trent",
-                    "role": "A father, engineer",
-                    "notes": [
-                        "Likes to build things", 
-                        "Is a bit of a nerd"],
-                },
-                "mathew8814": {
-                    "name": "Mathew",
-                    "role": "The group server owner",
-                    "notes": [
-                        "Likes weed",
-                        "sometimes makes a simple task more complicated than it needs to be",
-                    ],
-                },
-                "phantasmi": {
-                    "name": "Q",
-                    "role": "",
-                    "alt": "yoloidkphone",
-                    "notes": [
-                        "Likes weed",
-                        "Mains shadowpriest in WoW and hops guilds a lot",
-                        "Takes cares of a mentally challenged person for a living",
-                        "computer on the brink of death (GTX970)",
-                        "When a new game comes out they binge it and surpass everyone playing it",
-                        "Makes Fortnite maps",
-                    ],
-                },
-                "yoloidkphone": {
-                    "name": "Q",
-                    "role": "Gamer",
-                    "alt": "phantasmi",
-                    "notes": [
-                        "Likes weed",
-                        "MMO player and mains shadowpriest in WoW",
-                        "Takes cares of a mentally challenged person for a living",
-                        "computer on the brink of death (GTX970)",
-                        "When a new game comes out they binge it and surpass everyone playing it",
-                        "Makes Fortnite maps",
-                    ],
-                },
-                "suppras": {
-                    "name": "Teagan",
-                    "role": "Singer with loud personality",
-                    "notes": [
-                        "Sometimes ignores/doesn't hear others",
-                        "Is in a band",
-                        "can take forever to come back from bathroom",
-                        "likes to sing",
-                        "has one of those big circular black trashcans in their room",
-                    ],
-                },
-                "daviedarco": {
-                    "name": "David",
-                    "role": "IT professional in private military sector",
-                    "notes": [
-                        "Rarely active", 
-                        "Likes Destiny 2", 
-                        "Likes to drink",
-                              ],
-                },
-                "anthonyrev": {
-                    "name": "Anthony",
-                    "role": "Young low 20s",
-                    "notes": [
-                        "Lost father do not make parent roasts",
-                        "Has lizard named Octane",
-                        "car enthusiast",
-                        "falls asleep at keyboad a lot",
-                        "likes milkshakes",
-                    ],
-                },
-            },
-        }
 
     @commands.command()
     async def prompt(self, ctx, *, prompt: str):
@@ -184,13 +106,13 @@ class AICommands(commands.Cog):
             per_channel_limit = max(5000, limit // len(channels_to_check))
             message_count = 0
 
-            # Get alt account if applicable
-            alt_username = None
-            if member.name in self.server_context["members"]:
-                member_info = self.server_context["members"][member.name]
-                if "alt" in member_info:
-                    alt_username = member_info["alt"]
-                    logger.info(f"Found alt account for {member.name}: {alt_username}")
+            # Get user data from member manager
+            user_data = member_manager.get_user_data(member.name)
+            
+            # Get author data if they're trying to roast _hedge
+            author_data = None
+            if member.name == "_hedge" and self.hedge_protection_enabled:
+                author_data = member_manager.get_user_data(ctx.author.name)
 
             # Loop through each channel
             for channel in channels_to_check:
@@ -202,19 +124,7 @@ class AICommands(commands.Cog):
                         if message.content.startswith("!"):
                             continue
 
-                        # Include messages from both main and alt account if applicable
-                        if (
-                            message.author.id == member.id
-                            or (alt_username and message.author.name == alt_username)
-                            or (
-                                member.name == "phantasmi"
-                                and message.author.name == "yoloidkphone"
-                            )
-                            or (
-                                member.name == "yoloidkphone"
-                                and message.author.name == "phantasmi"
-                            )
-                        ):
+                        if message.author.id == member.id:
                             if message.content:
                                 user_messages.append(
                                     f"[{message.author.name}] {message.content}"
@@ -241,14 +151,6 @@ class AICommands(commands.Cog):
                 )
                 return
 
-            # Get member context
-            member_context = self.server_context["members"].get(member.name, {})
-            
-            # Get author context if they're trying to roast _hedge
-            author_context = None
-            if member.name == "_hedge" and self.hedge_protection_enabled:
-                author_context = self.server_context["members"].get(ctx.author.name, {})
-            
             # Prepare the prompt for the roast
             prompt = ""
             
@@ -259,28 +161,26 @@ class AICommands(commands.Cog):
                 prompt += (
                     f"You are a master roaster in The Lounge Discord server. Your task is to create a brutal, "
                     f"hilarious roast of {member.name} based on their message history and server context.\n\n"
-                    f"SERVER CONTEXT:\n"
-                    f"- This is The Lounge, a tight-knit group of friends\n"
-                    f"- {member.name} is known as {member_context.get('name', member.name)}\n"
-                    f"- Their role in the group: {member_context.get('role', 'Member')}\n"
-                    f"- Special notes:\n"
-                    f"{chr(10).join([f'  * {note}' for note in member_context.get('notes', ['None'])])}\n\n"
                 )
+
+                # Add user data if available
+                if user_data["notes"] or user_data["names"]:
+                    prompt += f"SERVER CONTEXT:\n"
+                    if user_data["names"]:
+                        prompt += f"- Known as: {', '.join(user_data['names'])}\n"
+                    if user_data["notes"]:
+                        prompt += f"- Special notes:\n{chr(10).join([f'  * {note}' for note in user_data['notes']])}\n\n"
 
             # Add author context if they're trying to roast _hedge
-            if author_context:
+            if author_data and (author_data["notes"] or author_data["names"]):
                 prompt += (
                     f"REQUESTER CONTEXT (when target is _hedge):\n"
-                    f"- {ctx.author.name} is known as {author_context.get('name', ctx.author.name)}\n"
-                    f"- Their role in the group: {author_context.get('role', 'Member')}\n"
-                    f"- Special notes:\n"
-                    f"{chr(10).join([f'  * {note}' for note in author_context.get('notes', ['None'])])}\n\n"
                 )
+                if author_data["names"]:
+                    prompt += f"- Known as: {', '.join(author_data['names'])}\n"
+                if author_data["notes"]:
+                    prompt += f"- Special notes:\n{chr(10).join([f'  * {note}' for note in author_data['notes']])}\n\n"
 
-            
-
-            # Only add the _hedge protection rule if it's enabled
-           
             prompt += (
                 f"USER MESSAGES:\n"
                 f"{chr(10).join(user_messages)}\n\n"
