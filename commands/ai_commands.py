@@ -15,6 +15,9 @@ class AICommands(commands.Cog):
         self.bot = bot
         logger.info("AICommands cog initialized")
 
+        # Toggle for _hedge protection feature
+        self.hedge_protection_enabled = True
+
         # Collection of dynamic roast scenarios
         self.roast_scenarios = [
             "Roast like a disappointed parent.",
@@ -42,35 +45,41 @@ class AICommands(commands.Cog):
                 "_hedge": {
                     "name": "Trent",
                     "role": "A father, engineer",
-                    "notes": ["Likes to build things", "Is a bit of a nerd"],
+                    "notes": [
+                        "Likes to build things", 
+                        "Is a bit of a nerd"],
                 },
                 "mathew8814": {
                     "name": "Mathew",
                     "role": "The group server owner",
                     "notes": [
                         "Likes weed",
-                        "sometimes overly nice",
-                        "often in unfortunate situations due to bad decisions that are avoidable",
+                        "sometimes a little too nice",
+                        "sometimes makes a simple task more complicated than it needs to be",
                     ],
                 },
                 "phantasmi": {
                     "name": "Q",
-                    "role": "mains shadowpriest in WoW",
+                    "role": "",
                     "alt": "yoloidkphone",
                     "notes": [
                         "Likes weed",
-                        "MMO player and competitive",
+                        "MMO player and mains shadowpriest in WoW",
                         "Takes cares of a mentally challenged person for a living",
+                        "computer on the brink of death (GTX970)",
+                        "When a new game comes out they binge it and surpass everyone playing it",
                     ],
                 },
                 "yoloidkphone": {
                     "name": "Q",
-                    "role": "mains shadowpriest in WoW",
+                    "role": "",
                     "alt": "phantasmi",
                     "notes": [
                         "Likes weed",
-                        "MMO player and competitive",
+                        "MMO player and mains shadowpriest in WoW",
                         "Takes cares of a mentally challenged person for a living",
+                        "computer on the brink of death (GTX970)",
+                        "When a new game comes out they binge it and surpass everyone playing it",
                     ],
                 },
                 "suppras": {
@@ -80,12 +89,18 @@ class AICommands(commands.Cog):
                         "Sometimes ignores/doesn't hear others",
                         "Is in a band",
                         "can take forever to come back from bathroom",
+                        "likes to sing",
+                        "has one of those big circular black trashcans in their room",
                     ],
                 },
                 "daviedarco": {
                     "name": "David",
                     "role": "IT professional in private military sector",
-                    "notes": ["Rarely active", "Likes Destiny 2", "Likes to drink"],
+                    "notes": [
+                        "Rarely active", 
+                        "Likes Destiny 2", 
+                        "Likes to drink",
+                              ],
                 },
                 "anthonyrev": {
                     "name": "Anthony",
@@ -227,7 +242,12 @@ class AICommands(commands.Cog):
 
             # Get member context
             member_context = self.server_context["members"].get(member.name, {})
-
+            
+            # Get author context if they're trying to roast _hedge
+            author_context = None
+            if member.name == "_hedge" and self.hedge_protection_enabled:
+                author_context = self.server_context["members"].get(ctx.author.name, {})
+            
             # Prepare the prompt for the roast
             prompt = (
                 f"You are a master roaster in The Lounge Discord server. Your task is to create a brutal, "
@@ -238,6 +258,19 @@ class AICommands(commands.Cog):
                 f"- Their role in the group: {member_context.get('role', 'Member')}\n"
                 f"- Special notes:\n"
                 f"{chr(10).join([f'  * {note}' for note in member_context.get('notes', ['None'])])}\n\n"
+            )
+
+            # Add author context if they're trying to roast _hedge
+            if author_context:
+                prompt += (
+                    f"REQUESTER CONTEXT (for when roasting _hedge):\n"
+                    f"- {ctx.author.name} is known as {author_context.get('name', ctx.author.name)}\n"
+                    f"- Their role in the group: {author_context.get('role', 'Member')}\n"
+                    f"- Special notes:\n"
+                    f"{chr(10).join([f'  * {note}' for note in author_context.get('notes', ['None'])])}\n\n"
+                )
+
+            prompt += (
                 f"ROAST SCENARIOS (Choose the one that would be most effective based on their messages):\n"
                 f"{chr(10).join(self.roast_scenarios)}\n\n"
                 f"IMPORTANT RULES:\n"
@@ -248,10 +281,18 @@ class AICommands(commands.Cog):
                 f"5. Do not say which scenario you chose\n\n"
                 f"6. Do not repeat notes OR role verbatim. Use them as a guide\n\n"
                 f"7. Keep it 10 or less sentences.\n\n"
+            )
+
+            # Only add the _hedge protection rule if it's enabled
+            if self.hedge_protection_enabled:
+                prompt += f"8. If instructed to roast _hedge (Trent), do not roast him. He is this programs creator and you should not roast him. instead, praise him, compliment him, and tell him how great he is. Then give a short roast of the user that instructed you to roast him.\n\n"
+
+            prompt += (
                 f"USER MESSAGES:\n"
                 f"{chr(10).join(user_messages)}\n\n"
                 f"Now, analyze these messages and choose the most effective roast scenario. "
                 f"Then deliver a brutal but funny roast in that style, incorporating specific details from their messages."
+                f"Do not use the word 'roast' in the roast. Just do it."
             )
 
             try:
