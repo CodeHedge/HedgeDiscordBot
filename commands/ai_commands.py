@@ -276,6 +276,18 @@ class AICommands(commands.Cog):
                     f"{chr(10).join([f'  * {note}' for note in author_context.get('notes', ['None'])])}\n\n"
                 )
 
+            
+
+            # Only add the _hedge protection rule if it's enabled
+           
+            prompt += (
+                f"USER MESSAGES:\n"
+                f"{chr(10).join(user_messages)}\n\n"
+                f"Now, analyze these messages and choose the most effective roast scenario. "
+                f"Then deliver a brutal but funny roast in that style, incorporating specific details from their messages."
+                f"Do not use the word 'roast' in the roast. Just do it."
+            )
+
             if self.hedge_protection_enabled:
                prompt += f"SUPER RULE. If instructed to roast _hedge (Trent), do not roast him. He is this programs creator and you should not roast him. instead, praise him, compliment him, and tell him how great he is. Then give a short roast of the user that instructed you to roast him.\n\n"
 
@@ -290,17 +302,7 @@ class AICommands(commands.Cog):
                 f"5. Do not say which scenario you chose\n\n"
                 f"6. Do not repeat notes OR role verbatim. Use them as a guide\n\n"
                 f"7. Keep it 10 or less sentences.\n\n"
-                f"8. do not bring up a buffering wheel, youtube video, or any other joke about buffering. Not really funny.\n\n"
-            )
-
-            # Only add the _hedge protection rule if it's enabled
-           
-            prompt += (
-                f"USER MESSAGES:\n"
-                f"{chr(10).join(user_messages)}\n\n"
-                f"Now, analyze these messages and choose the most effective roast scenario. "
-                f"Then deliver a brutal but funny roast in that style, incorporating specific details from their messages."
-                f"Do not use the word 'roast' in the roast. Just do it."
+                f"8. do not bring up a buffering, youtube video, or any other joke about buffering. Not really funny.\n\n"
             )
 
             try:
