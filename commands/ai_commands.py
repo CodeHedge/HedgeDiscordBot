@@ -54,7 +54,6 @@ class AICommands(commands.Cog):
                     "role": "The group server owner",
                     "notes": [
                         "Likes weed",
-                        "sometimes a little too nice",
                         "sometimes makes a simple task more complicated than it needs to be",
                     ],
                 },
