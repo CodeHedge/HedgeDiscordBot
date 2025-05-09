@@ -260,7 +260,7 @@ class AICommands(commands.Cog):
 
                 # Create an embed for the roast
                 embed = discord.Embed(
-                    title=f"Brutal Roast of {member.name}",
+                    title=f"The Roast of {member.name}",
                     description=roast,
                     color=discord.Color.red(),
                 )

@@ -24,7 +24,7 @@ async def process_ai_request(prompt: str) -> str:
             lambda: client.chat.completions.create(
                 model=openai_model,
                 messages=[{"role": "user", "content": prompt}],
-                top_p=0.85,
+                temperature=0.7,
                 max_tokens=5000
             )
         )
