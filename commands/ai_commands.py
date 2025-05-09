@@ -249,21 +249,27 @@ class AICommands(commands.Cog):
                 author_context = self.server_context["members"].get(ctx.author.name, {})
             
             # Prepare the prompt for the roast
-            prompt = (
-                f"You are a master roaster in The Lounge Discord server. Your task is to create a brutal, "
-                f"hilarious roast of {member.name} based on their message history and server context.\n\n"
-                f"SERVER CONTEXT:\n"
-                f"- This is The Lounge, a tight-knit group of friends\n"
-                f"- {member.name} is known as {member_context.get('name', member.name)}\n"
-                f"- Their role in the group: {member_context.get('role', 'Member')}\n"
-                f"- Special notes:\n"
-                f"{chr(10).join([f'  * {note}' for note in member_context.get('notes', ['None'])])}\n\n"
-            )
+            prompt = ""
+            
+            # Add standard prompt if:
+            # 1. Target is not _hedge (always add for others)
+            # 2. OR if target is _hedge but protection is disabled
+            if member.name != "_hedge" or (member.name == "_hedge" and not self.hedge_protection_enabled):
+                prompt += (
+                    f"You are a master roaster in The Lounge Discord server. Your task is to create a brutal, "
+                    f"hilarious roast of {member.name} based on their message history and server context.\n\n"
+                    f"SERVER CONTEXT:\n"
+                    f"- This is The Lounge, a tight-knit group of friends\n"
+                    f"- {member.name} is known as {member_context.get('name', member.name)}\n"
+                    f"- Their role in the group: {member_context.get('role', 'Member')}\n"
+                    f"- Special notes:\n"
+                    f"{chr(10).join([f'  * {note}' for note in member_context.get('notes', ['None'])])}\n\n"
+                )
 
             # Add author context if they're trying to roast _hedge
             if author_context:
                 prompt += (
-                    f"REQUESTER CONTEXT (for when roasting _hedge):\n"
+                    f"REQUESTER CONTEXT (when target is _hedge):\n"
                     f"- {ctx.author.name} is known as {author_context.get('name', ctx.author.name)}\n"
                     f"- Their role in the group: {author_context.get('role', 'Member')}\n"
                     f"- Special notes:\n"
