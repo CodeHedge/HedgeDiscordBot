@@ -16,7 +16,7 @@ class AICommands(commands.Cog):
         logger.info("AICommands cog initialized")
 
         # Toggle for _hedge protection feature
-        self.hedge_protection_enabled = True
+        self.hedge_protection_enabled = False
 
         # Collection of dynamic roast scenarios
         self.roast_scenarios = [
