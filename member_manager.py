@@ -34,49 +34,92 @@ class MemberManager:
         # Refresh the data after saving
         self.members = self.load_members()
 
+    def find_main_username(self, username):
+        """Find the main username for a given username or alias"""
+        # First check if the username exists directly
+        if username in self.members:
+            return username
+
+        # Then check all members' aliases
+        for main_username, data in self.members.items():
+            if "aliases" in data and username in data["aliases"]:
+                return main_username
+
+        # If not found, return the original username
+        return username
+
     def add_note(self, username, note):
         """Add a note for a user"""
-        if username not in self.members:
-            self.members[username] = {"notes": [], "names": []}
+        main_username = self.find_main_username(username)
         
-        if "notes" not in self.members[username]:
-            self.members[username]["notes"] = []
+        if main_username not in self.members:
+            self.members[main_username] = {"notes": [], "names": [], "aliases": []}
+        
+        if "notes" not in self.members[main_username]:
+            self.members[main_username]["notes"] = []
             
-        self.members[username]["notes"].append(note)
+        self.members[main_username]["notes"].append(note)
         self.save_members()
         return True
 
+    def add_name(self, username, name):
+        """Add a name for a user"""
+        main_username = self.find_main_username(username)
+        
+        if main_username not in self.members:
+            self.members[main_username] = {"notes": [], "names": [], "aliases": []}
+        
+        if "names" not in self.members[main_username]:
+            self.members[main_username]["names"] = []
+            
+        if name not in self.members[main_username]["names"]:
+            self.members[main_username]["names"].append(name)
+            self.save_members()
+            return True
+        return False
+
+    def add_alias(self, username, alias):
+        """Add an alias for a user"""
+        main_username = self.find_main_username(username)
+        
+        if main_username not in self.members:
+            self.members[main_username] = {"notes": [], "names": [], "aliases": []}
+        
+        if "aliases" not in self.members[main_username]:
+            self.members[main_username]["aliases"] = []
+            
+        if alias not in self.members[main_username]["aliases"]:
+            self.members[main_username]["aliases"].append(alias)
+            self.save_members()
+            return True
+        return False
+
     def remove_note(self, username, note_index):
         """Remove a note for a user by index"""
-        if username in self.members and "notes" in self.members[username]:
+        main_username = self.find_main_username(username)
+        
+        if main_username in self.members and "notes" in self.members[main_username]:
             try:
                 note_index = int(note_index)
-                if 0 <= note_index < len(self.members[username]["notes"]):
-                    removed_note = self.members[username]["notes"].pop(note_index)
+                if 0 <= note_index < len(self.members[main_username]["notes"]):
+                    removed_note = self.members[main_username]["notes"].pop(note_index)
                     self.save_members()
                     return True, removed_note
             except ValueError:
                 pass
         return False, None
 
-    def add_name(self, username, name):
-        """Add a name for a user"""
-        if username not in self.members:
-            self.members[username] = {"notes": [], "names": []}
-        
-        if "names" not in self.members[username]:
-            self.members[username]["names"] = []
-            
-        if name not in self.members[username]["names"]:
-            self.members[username]["names"].append(name)
-            self.save_members()
-            return True
-        return False
-
     def get_user_data(self, username):
         """Get all data for a user"""
-        return self.members.get(username, {"notes": [], "names": []})
+        main_username = self.find_main_username(username)
+        return self.members.get(main_username, {"notes": [], "names": [], "aliases": []})
 
     def get_all_members(self):
         """Get all member data"""
-        return self.members 
+        return self.members
+
+    def get_user_aliases(self, username):
+        """Get all aliases for a user"""
+        main_username = self.find_main_username(username)
+        user_data = self.get_user_data(main_username)
+        return user_data.get("aliases", []) 

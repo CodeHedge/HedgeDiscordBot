@@ -32,8 +32,9 @@ class MemberCommands(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(name='name')
+    @is_sudo()
     async def add_name(self, ctx, username: str, *, name: str):
-        """Add a name for a user"""
+        """Add a name for a user (Sudo only)"""
         if member_manager.add_name(username, name):
             embed = discord.Embed(
                 title="Name Added",
@@ -45,6 +46,25 @@ class MemberCommands(commands.Cog):
             embed = discord.Embed(
                 title="Name Already Exists",
                 description=f"Name '{name}' already exists for {username}",
+                color=discord.Color.yellow()
+            )
+            await ctx.send(embed=embed)
+
+    @commands.command(name='alias')
+    @is_sudo()
+    async def add_alias(self, ctx, username: str, *, alias: str):
+        """Add an alias for a user (Sudo only)"""
+        if member_manager.add_alias(username, alias):
+            embed = discord.Embed(
+                title="Alias Added",
+                description=f"Alias '{alias}' added for {username}",
+                color=discord.Color.green()
+            )
+            await ctx.send(embed=embed)
+        else:
+            embed = discord.Embed(
+                title="Alias Already Exists",
+                description=f"Alias '{alias}' already exists for {username}",
                 color=discord.Color.yellow()
             )
             await ctx.send(embed=embed)
@@ -130,6 +150,35 @@ class MemberCommands(commands.Cog):
             embed.description = names_text
         else:
             embed.description = f"No names found for {username}"
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='getaliases')
+    @is_sudo()
+    async def get_aliases(self, ctx, username: str):
+        """Get all aliases for a user (Sudo only)"""
+        user_data = member_manager.get_user_data(username)
+        
+        # Try to find the user in the guild
+        user = None
+        for guild in self.bot.guilds:
+            user = discord.utils.get(guild.members, name=username)
+            if user:
+                break
+
+        embed = discord.Embed(
+            title=f"Aliases for {username}",
+            color=discord.Color.blue()
+        )
+
+        if user and user.avatar:
+            embed.set_thumbnail(url=user.avatar.url)
+
+        if user_data["aliases"]:
+            aliases_text = "\n".join([f"- {alias}" for alias in user_data["aliases"]])
+            embed.description = aliases_text
+        else:
+            embed.description = f"No aliases found for {username}"
 
         await ctx.send(embed=embed)
 

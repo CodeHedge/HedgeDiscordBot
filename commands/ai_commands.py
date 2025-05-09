@@ -114,6 +114,9 @@ class AICommands(commands.Cog):
             if member.name == "_hedge" and self.hedge_protection_enabled:
                 author_data = member_manager.get_user_data(ctx.author.name)
 
+            # Get user aliases
+            user_aliases = member_manager.get_user_aliases(member.name)
+
             # Loop through each channel
             for channel in channels_to_check:
                 try:
@@ -124,7 +127,9 @@ class AICommands(commands.Cog):
                         if message.content.startswith("!"):
                             continue
 
-                        if message.author.id == member.id:
+                        # Check if message is from the user or any of their aliases
+                        if (message.author.id == member.id or 
+                            message.author.name in user_aliases):
                             if message.content:
                                 user_messages.append(
                                     f"[{message.author.name}] {message.content}"
