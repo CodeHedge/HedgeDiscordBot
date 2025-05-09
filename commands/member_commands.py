@@ -17,48 +17,121 @@ class MemberCommands(commands.Cog):
     async def add_note(self, ctx, username: str, *, note: str):
         """Add a note for a user"""
         if member_manager.add_note(username, note):
-            await ctx.send(f"Note added for {username}")
+            embed = discord.Embed(
+                title="Note Added",
+                description=f"Note added for {username}",
+                color=discord.Color.green()
+            )
+            await ctx.send(embed=embed)
         else:
-            await ctx.send("Failed to add note")
+            embed = discord.Embed(
+                title="Error",
+                description="Failed to add note",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
 
     @commands.command(name='name')
     async def add_name(self, ctx, username: str, *, name: str):
         """Add a name for a user"""
         if member_manager.add_name(username, name):
-            await ctx.send(f"Name '{name}' added for {username}")
+            embed = discord.Embed(
+                title="Name Added",
+                description=f"Name '{name}' added for {username}",
+                color=discord.Color.green()
+            )
+            await ctx.send(embed=embed)
         else:
-            await ctx.send(f"Name '{name}' already exists for {username}")
+            embed = discord.Embed(
+                title="Name Already Exists",
+                description=f"Name '{name}' already exists for {username}",
+                color=discord.Color.yellow()
+            )
+            await ctx.send(embed=embed)
 
     @commands.command(name='getnotes')
     @is_sudo()
     async def get_notes(self, ctx, username: str):
         """Get all notes for a user (Sudo only)"""
         user_data = member_manager.get_user_data(username)
+        
+        # Try to find the user in the guild
+        user = None
+        for guild in self.bot.guilds:
+            user = discord.utils.get(guild.members, name=username)
+            if user:
+                break
+
+        embed = discord.Embed(
+            title=f"Notes for {username}",
+            color=discord.Color.blue()
+        )
+
+        if user and user.avatar:
+            embed.set_thumbnail(url=user.avatar.url)
+
         if user_data["notes"]:
-            notes_text = "\n".join([f"{i}. {note}" for i, note in enumerate(user_data["notes"])])
-            await ctx.send(f"Notes for {username}:\n{notes_text}")
+            notes_text = "\n".join([f"{i+1}. {note}" for i, note in enumerate(user_data["notes"])])
+            embed.description = notes_text
+            embed.set_footer(text="Use !removenote <username> <number> to remove a note")
         else:
-            await ctx.send(f"No notes found for {username}")
+            embed.description = f"No notes found for {username}"
+
+        await ctx.send(embed=embed)
 
     @commands.command(name='removenote')
     @is_sudo()
     async def remove_note(self, ctx, username: str, note_index: str):
         """Remove a note for a user by index (Sudo only)"""
-        success, removed_note = member_manager.remove_note(username, note_index)
-        if success:
-            await ctx.send(f"Removed note: {removed_note}")
-        else:
-            await ctx.send("Failed to remove note. Make sure the index is valid.")
+        try:
+            # Convert to 0-based index
+            note_index = int(note_index) - 1
+            if note_index < 0:
+                raise ValueError("Index must be positive")
+                
+            success, removed_note = member_manager.remove_note(username, str(note_index))
+            
+            embed = discord.Embed(
+                title="Note Removed" if success else "Error",
+                description=f"Removed note: {removed_note}" if success else "Failed to remove note. Make sure the index is valid.",
+                color=discord.Color.green() if success else discord.Color.red()
+            )
+            await ctx.send(embed=embed)
+        except ValueError:
+            embed = discord.Embed(
+                title="Error",
+                description="Please provide a valid positive number for the note index",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed)
 
     @commands.command(name='getnames')
     async def get_names(self, ctx, username: str):
         """Get all names for a user"""
         user_data = member_manager.get_user_data(username)
+        
+        # Try to find the user in the guild
+        user = None
+        for guild in self.bot.guilds:
+            user = discord.utils.get(guild.members, name=username)
+            if user:
+                break
+
+        embed = discord.Embed(
+            title=f"Names for {username}",
+            color=discord.Color.blue()
+        )
+
+        if user and user.avatar:
+            embed.set_thumbnail(url=user.avatar.url)
+
         if user_data["names"]:
             names_text = "\n".join([f"- {name}" for name in user_data["names"]])
-            await ctx.send(f"Names for {username}:\n{names_text}")
+            embed.description = names_text
         else:
-            await ctx.send(f"No names found for {username}")
+            embed.description = f"No names found for {username}"
+
+        await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(MemberCommands(bot)) 
