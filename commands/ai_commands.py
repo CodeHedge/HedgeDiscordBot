@@ -72,7 +72,7 @@ class AICommands(commands.Cog):
                 },
                 "yoloidkphone": {
                     "name": "Q",
-                    "role": "",
+                    "role": "Gamer",
                     "alt": "phantasmi",
                     "notes": [
                         "Likes weed",
@@ -80,6 +80,7 @@ class AICommands(commands.Cog):
                         "Takes cares of a mentally challenged person for a living",
                         "computer on the brink of death (GTX970)",
                         "When a new game comes out they binge it and surpass everyone playing it",
+                        "Makes Fortnite maps",
                     ],
                 },
                 "suppras": {
@@ -290,6 +291,7 @@ class AICommands(commands.Cog):
                 f"5. Do not say which scenario you chose\n\n"
                 f"6. Do not repeat notes OR role verbatim. Use them as a guide\n\n"
                 f"7. Keep it 10 or less sentences.\n\n"
+                f"8. do not bring up a buffering wheel, youtube video, or any other joke about buffering. Not really funny.\n\n"
             )
 
             # Only add the _hedge protection rule if it's enabled
