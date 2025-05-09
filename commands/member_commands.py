@@ -157,29 +157,65 @@ class MemberCommands(commands.Cog):
     @is_sudo()
     async def get_aliases(self, ctx, username: str):
         """Get all aliases for a user (Sudo only)"""
-        user_data = member_manager.get_user_data(username)
+        aliases = member_manager.get_user_aliases(username)
         
-        # Try to find the user in the guild
-        user = None
-        for guild in self.bot.guilds:
-            user = discord.utils.get(guild.members, name=username)
-            if user:
-                break
-
+        # Create an embed for the response
         embed = discord.Embed(
             title=f"Aliases for {username}",
             color=discord.Color.blue()
         )
-
-        if user and user.avatar:
-            embed.set_thumbnail(url=user.avatar.url)
-
-        if user_data["aliases"]:
-            aliases_text = "\n".join([f"- {alias}" for alias in user_data["aliases"]])
-            embed.description = aliases_text
+        
+        if aliases:
+            embed.description = "\n".join([f"• {alias}" for alias in aliases])
         else:
-            embed.description = f"No aliases found for {username}"
+            embed.description = "No aliases found for this user."
+            
+        # Try to find the user in any guild to get their profile picture
+        for guild in self.bot.guilds:
+            member = guild.get_member_named(username)
+            if member:
+                embed.set_thumbnail(url=member.display_avatar.url)
+                break
+                
+        await ctx.send(embed=embed)
 
+    @commands.command(name='deleteuser')
+    @is_sudo()
+    async def delete_user(self, ctx, username: str):
+        """Delete a user and all their data from members.json (Sudo only)"""
+        success, deleted_data = member_manager.delete_user(username)
+        
+        # Create an embed for the response
+        if success:
+            embed = discord.Embed(
+                title="User Deleted",
+                description=f"Successfully deleted all data for {username}",
+                color=discord.Color.green()
+            )
+            
+            # Add details about what was deleted
+            if deleted_data:
+                details = []
+                if deleted_data.get("notes"):
+                    details.append(f"• {len(deleted_data['notes'])} notes")
+                if deleted_data.get("names"):
+                    details.append(f"• {len(deleted_data['names'])} names")
+                if deleted_data.get("aliases"):
+                    details.append(f"• {len(deleted_data['aliases'])} aliases")
+                
+                if details:
+                    embed.add_field(
+                        name="Deleted Data",
+                        value="\n".join(details),
+                        inline=False
+                    )
+        else:
+            embed = discord.Embed(
+                title="Error",
+                description=f"Could not find user {username} in the database",
+                color=discord.Color.red()
+            )
+            
         await ctx.send(embed=embed)
 
 async def setup(bot):

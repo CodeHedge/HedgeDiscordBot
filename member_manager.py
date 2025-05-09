@@ -122,4 +122,18 @@ class MemberManager:
         """Get all aliases for a user"""
         main_username = self.find_main_username(username)
         user_data = self.get_user_data(main_username)
-        return user_data.get("aliases", []) 
+        return user_data.get("aliases", [])
+
+    def delete_user(self, username):
+        """Delete a user and all their data from the members file"""
+        main_username = self.find_main_username(username)
+        
+        if main_username in self.members:
+            # Store the data before deletion for the return value
+            deleted_data = self.members[main_username]
+            # Delete the user
+            del self.members[main_username]
+            # Save the changes
+            self.save_members()
+            return True, deleted_data
+        return False, None 
