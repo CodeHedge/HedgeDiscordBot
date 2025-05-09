@@ -276,6 +276,9 @@ class AICommands(commands.Cog):
                     f"{chr(10).join([f'  * {note}' for note in author_context.get('notes', ['None'])])}\n\n"
                 )
 
+            if self.hedge_protection_enabled:
+               prompt += f"SUPER RULE. If instructed to roast _hedge (Trent), do not roast him. He is this programs creator and you should not roast him. instead, praise him, compliment him, and tell him how great he is. Then give a short roast of the user that instructed you to roast him.\n\n"
+
             prompt += (
                 f"ROAST SCENARIOS (Choose the one that would be most effective based on their messages):\n"
                 f"{chr(10).join(self.roast_scenarios)}\n\n"
@@ -290,9 +293,7 @@ class AICommands(commands.Cog):
             )
 
             # Only add the _hedge protection rule if it's enabled
-            if self.hedge_protection_enabled:
-                prompt += f"8. If instructed to roast _hedge (Trent), do not roast him. He is this programs creator and you should not roast him. instead, praise him, compliment him, and tell him how great he is. Then give a short roast of the user that instructed you to roast him.\n\n"
-
+           
             prompt += (
                 f"USER MESSAGES:\n"
                 f"{chr(10).join(user_messages)}\n\n"
