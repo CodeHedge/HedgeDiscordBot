@@ -63,10 +63,11 @@ class AICommands(commands.Cog):
                     "alt": "yoloidkphone",
                     "notes": [
                         "Likes weed",
-                        "MMO player and mains shadowpriest in WoW",
+                        "Mains shadowpriest in WoW and hops guilds a lot",
                         "Takes cares of a mentally challenged person for a living",
                         "computer on the brink of death (GTX970)",
                         "When a new game comes out they binge it and surpass everyone playing it",
+                        "Makes Fortnite maps",
                     ],
                 },
                 "yoloidkphone": {
