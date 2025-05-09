@@ -2,12 +2,15 @@ from discord.ext import commands
 import discord
 import logging
 import random
+from config import load_config
 
 logger = logging.getLogger(__name__)
 
 class HelpCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.config = load_config()
+        self.sudo_users = self.config.get('sudo', [])
         logger.info("Setting up custom help command")
         self._original_help_command = bot.help_command
         bot.help_command = CustomHelpCommand()
@@ -17,6 +20,76 @@ class HelpCommand(commands.Cog):
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
         logger.info("Custom help command unloaded")
+
+    def is_sudo():
+        async def predicate(ctx):
+            return ctx.author.id in ctx.cog.sudo_users
+        return commands.check(predicate)
+
+    @commands.command(name='help')
+    async def help_command(self, ctx, command_name: str = None):
+        """Show help for commands"""
+        if command_name:
+            # Show help for specific command
+            command = self.bot.get_command(command_name)
+            if command:
+                embed = discord.Embed(
+                    title=f"Help: {command.name}",
+                    description=command.help or "No description available",
+                    color=discord.Color.blue()
+                )
+                if command.aliases:
+                    embed.add_field(name="Aliases", value=", ".join(command.aliases))
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send(f"Command '{command_name}' not found.")
+            return
+
+        # Show general help
+        embed = discord.Embed(
+            title="Bot Commands",
+            description="Here are all available commands:",
+            color=discord.Color.blue()
+        )
+
+        # Basic Commands
+        basic_commands = [
+            ("!help [command]", "Show help for all commands or a specific command"),
+            ("!ping", "Check bot's latency"),
+        ]
+        embed.add_field(name="Basic Commands", value="\n".join([f"`{cmd}` - {desc}" for cmd, desc in basic_commands]), inline=False)
+
+        # Member Commands
+        member_commands = [
+            ("!note <username> <note>", "Add a note for a user"),
+            ("!name <username> <name>", "Add a name for a user"),
+            ("!getnames <username>", "Show all names for a user"),
+        ]
+        embed.add_field(name="Member Commands", value="\n".join([f"`{cmd}` - {desc}" for cmd, desc in member_commands]), inline=False)
+
+        # Sudo Commands
+        sudo_commands = [
+            ("!getnotes <username>", "Show all notes for a user (with index numbers)"),
+            ("!removenote <username> <index>", "Remove a note by its index number"),
+        ]
+        embed.add_field(name="Sudo Commands", value="\n".join([f"`{cmd}` - {desc}" for cmd, desc in sudo_commands]), inline=False)
+
+        # AI Commands
+        ai_commands = [
+            ("!analyze <username>", "Analyze a user's messages"),
+            ("!ask <question>", "Ask the AI a question"),
+        ]
+        embed.add_field(name="AI Commands", value="\n".join([f"`{cmd}` - {desc}" for cmd, desc in ai_commands]), inline=False)
+
+        # Utility Commands
+        utility_commands = [
+            ("!remind <time> <message>", "Set a reminder"),
+            ("!add_channel <channel_id>", "Add a channel to monitor"),
+            ("!remove_channel <channel_id>", "Remove a channel from monitoring"),
+        ]
+        embed.add_field(name="Utility Commands", value="\n".join([f"`{cmd}` - {desc}" for cmd, desc in utility_commands]), inline=False)
+
+        await ctx.send(embed=embed)
 
 class CustomHelpCommand(commands.HelpCommand):
     """Custom help command implementation with better formatting"""
@@ -286,3 +359,6 @@ class CustomHelpCommand(commands.HelpCommand):
             return "Help Commands"
         else:
             return cog_name 
+
+async def setup(bot):
+    await bot.add_cog(HelpCommand(bot)) 

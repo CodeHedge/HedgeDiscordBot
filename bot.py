@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 import logging
 import asyncio
-from config import load_config, load_moderation
+from config import load_config, load_moderation, member_manager
 from ai import moderate_message
 import os
 import traceback
@@ -44,6 +44,7 @@ async def load_extensions():
         from commands.reminders import ReminderCommands
         from commands.ai_analysis import AIAnalysisCommands
         from commands.help import HelpCommand
+        from commands.member_commands import MemberCommands
         
         # Add cogs one by one with explicit error handling
         cogs_to_load = [
@@ -53,7 +54,8 @@ async def load_extensions():
             (UtilityCommands, "UtilityCommands"),
             (ReminderCommands, "ReminderCommands"),
             (AIAnalysisCommands, "AIAnalysisCommands"),
-            (HelpCommand, "HelpCommand")
+            (HelpCommand, "HelpCommand"),
+            (MemberCommands, "MemberCommands")
         ]
         
         for cog_class, cog_name in cogs_to_load:

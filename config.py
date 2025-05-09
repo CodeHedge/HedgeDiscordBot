@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from helper import initialize_offense_files
+from member_manager import MemberManager
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def load_config():
             "excluded_users": [],
             "openai_api_key": openai_api_key,
             "openai_model": "gpt-3.5-turbo",
-            "sudo" : [292142885791465482],
+            "sudo": [292142885791465482],
             "analyze_command": {
                 "max_days": 365,
                 "max_messages": 500
@@ -76,5 +77,24 @@ def add_channel(channel_id):
         with open('config.json', 'w') as f:
             json.dump(config, f, indent=4)
         logger.info(f"Channel {channel_id} added to the configuration.")
+        # Reload the config to ensure fresh data
+        return load_config()
     else:
         logger.info(f"Channel {channel_id} is already in the configuration.")
+        return config
+
+def remove_channel(channel_id):
+    config = load_config()
+    if channel_id in config['channels']:
+        config['channels'].remove(channel_id)
+        with open('config.json', 'w') as f:
+            json.dump(config, f, indent=4)
+        logger.info(f"Channel {channel_id} removed from the configuration.")
+        # Reload the config to ensure fresh data
+        return load_config()
+    else:
+        logger.info(f"Channel {channel_id} is not in the configuration.")
+        return config
+
+# Initialize member manager
+member_manager = MemberManager()
